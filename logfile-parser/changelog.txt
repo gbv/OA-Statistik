@@ -1,0 +1,11 @@
+-	Logfile Parser
+	o	Correct integrationo of MIME-Types (thanks to Wolfgang Riese)
+	o	XML is now mostly valid. 
+	o	Fileextension-filter integrated, to reduce data-overhead like unnecessary.css files)
+		when generating XML files and 
+	o	ANY flag implemented, to reduce xml-data-overhead
+
+-	Data Provider
+	o	XML is now more readable
+	o	We installed a validator for the xml
+		http://transfer.cms.hu-berlin.de/oas_validator/index.php  
