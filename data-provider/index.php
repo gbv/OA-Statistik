@@ -218,13 +218,13 @@ try {
     // FIXME: Ugly hack to sanitize output:
     if($config['fix_broken_namespaces']) {
 	    $result=str_replace(
-		    array('<default:','</default:','<default1:','</default1:','<default11:','</default11:','<default2:','</default2:',
+		    array('<default:','</default:','<default1:','</default1:','<default11:','</default11:','<default2:','</default2:','<default3:','</default3:',
 			' xmlns:default="http://dini.de/namespace/oas-info" xmlns:default1="http://dini.de/namespace/oas-requesterinfo" xmlns:default2="info:ofi/fmt:xml:xsd:sch_svc"',
 			' xmlns:default="info:ofi/fmt:xml:xsd:ctx" xmlns:default1="http://dini.de/namespace/oas-info" xmlns:default11="http://dini.de/namespace/oas-requesterinfo" xmlns:default2="info:ofi/fmt:xml:xsd:sch_svc"',
 			' xmlns:default="info:ofi/fmt:xml:xsd:ctx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:default1="http://dini.de/namespace/oas-info" xmlns:default11="http://dini.de/namespace/oas-requesterinfo" xmlns:default2="info:ofi/fmt:xml:xsd:sch_svc"',
 			' xmlns:default="info:ofi/fmt:xml:xsd:ctx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:default1="http://dini.de/namespace/oas-info" xmlns:default11="info:ofi/fmt:xml:xsd:sch_svc" xmlns:default2="http://dini.de/namespace/oas-requesterinfo"'
 			),
-		    array('<','</','<','</','<','</','<','</',
+		    array('<','</','<','</','<','</','<','</','<','</',
 			'',
 			'',
 			'',

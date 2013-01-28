@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 ##############################################################################
 # 
-# SALT INTEGRATION
+# get SALT from server in Saarbruecken
 # 
 # update configuration below before first usage!
 # 
@@ -10,11 +10,9 @@
 # mw, 06/2012
 # 
 ##############################################################################
-# login data; register your dataprovider here to get a username and password:
-# http://www.dini.de/projekte/oa-statistik/die-technik/registrierung/
-USER="USERNAME"
-PASSWORD="PASSWORD"
-
+# login data
+USER="!!!!!USERNAME!!!!!"
+PASSWORD="!!!!PASSWORD!!!!!"
 # URL of salt file
 SALT_URL="http://oas.sulb.uni-saarland.de/salt/salt_value.txt"
 # file to save salt in

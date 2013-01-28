@@ -172,7 +172,7 @@ class CtxBuilder extends MyXmlWriter {
      * Closes the container
      */
     function done() {
-		$this->endElement(); // context-objects
+        $this->endElement(); // context-objects
     }	
 
     /**
@@ -182,6 +182,14 @@ class CtxBuilder extends MyXmlWriter {
      */
     function format_time($timestamp_unix) {
 		return gmdate('Y-m-d\TH:i:s\Z',$timestamp_unix);
+    }
+    
+    /**
+     * 
+     * @return int CTXOcounter in this container
+     */
+    function count_ctxo(){
+        return $this->output_count;
     }
     
 } 

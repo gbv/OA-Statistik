@@ -5,10 +5,10 @@
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 1.0
+ * @version 1.2
  */
 
-$version='1.0';
+$version='1.2';
 
 // Check if required PHP extensions are available
 if(!function_exists('preg_match'))
@@ -36,7 +36,7 @@ if(isset($options['h'])) {
 	// help requested
 	fwrite(STDERR,
 		"log2ctx ".$version.": a webserver logfile to context object container (XML) converter\n".
-		"(c) 2009-2010 OA-Statistik (DFG) / SUB Goettingen / Hans-Werner Hilse\n".
+		"(c) 2009-2013 OA-Statistik (DFG) / SUB Goettingen / Hans-Werner Hilse\n".
 		"<hilse@sub.uni-goettingen.de>\n".
 		"\n".
 		"USAGE:\n".
@@ -71,17 +71,45 @@ if(isset($options['S'])) $config['async']=false;
 
 if(isset($options['O'])) {
     // special case: initialize database
-    $dbh = new PDO(
-	    $config['database'],
-	    $config['username'],
-	    $config['password']);
-    //$stmt = $dbh->prepare('CREATE TABLE '.$config['tablename'].' (timestamp INT, identifier VARCHAR(255), line INT, data BLOB)');
-    $stmt = $dbh->prepare('CREATE TABLE '.$config['tablename'].' (timestamp INT(11) DEFAULT NULL, identifier VARCHAR(255) DEFAULT NULL, line INT(11) DEFAULT NULL,data BLOB, KEY timestamp (timestamp) ENGINE=MyISAM DEFAULT CHARSET=latin1))');
+    try {
+        
+        
+        $sqlquery = 'CREATE TABLE '.$config['tablename'].' ( timestamp INT(11) DEFAULT NULL,'. 
+                                                        'identifier VARCHAR(255) DEFAULT NULL,'.
+                                                        'line INT(11) DEFAULT NULL,'.
+                                                        'data LONGBLOB,'.
+                                                        'KEY timestamp (timestamp)) '.
+                                                        
+                                                        'ENGINE=MyISAM DEFAULT CHARSET=latin1';
+        
+        
+        //Give some infos
+        logger ('---------------------------------------');
+        logger ('Trying to create table in database "'.$config['database'] .'"....');
+        logger (' ');
+        logger ('Query:');
+        logger ($sqlquery.';');
+        logger ('---------------------------------------');
+
+        $tempdbh = new PDO(
+            $config['database'],
+            $config['username'],
+            $config['password'],
+            array(PDO::ATTR_PERSISTENT => false));
+
+        $tempdbh->beginTransaction();
+
+        //$stmt = $dbh->prepare('CREATE TABLE '.$config['tablename'].' (timestamp INT, identifier VARCHAR(255), line INT, data BLOB)');
+        $stmt = $tempdbh->prepare($sqlquery);
+        $stmt->execute();
+        $tempdbh->commit();
     
-    $dbh->beginTransaction();
-    $stmt->execute();
-    $dbh->commit();
-    echo "OK.\n";
+    } catch (Exception $e) {
+                    logger("<Database ERROR> Cannot interface with database: ".$e->getMessage());
+    }
+    
+    
+    logger( "\nOK.\n");
 } elseif(@$options['R']) {
     // special case: remove old data sets
     if($options['R']==='all') {

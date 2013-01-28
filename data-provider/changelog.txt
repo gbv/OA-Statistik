@@ -7,7 +7,6 @@
 	o	Some annotations added
 	o	Added STUB- files for an easier way to understand how to
 		install the parser
-
 -	Data Provider
 	o	Fixed a bug, where occasionally XML output was wasn't valid
 

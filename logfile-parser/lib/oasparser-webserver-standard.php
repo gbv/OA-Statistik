@@ -2,10 +2,10 @@
 /**
  * Parser for lines from standard webserver log files
  *
- * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
+ * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB GÃ¶ttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 0.2 Marc Giesmann, 27.09.2012
+ * @version 0.3 Marc Giesmann, 28.01.2013
  */
 
 require_once(dirname(__FILE__).'/oasparser.php');
@@ -16,51 +16,51 @@ class OASParserWebserverStandardException extends Exception {}
 
 class OASParserWebserverStandard extends OASParser {
     
-	var $async_tasks=array();
+        var $async_tasks=array();
     
     /**
      * Parse the logfile
      */
-	function parse() {
-		$this->dbh = new PDO(
-				$this->config['database'],
-				$this->config['username'],
-				$this->config['password'],
-				array(PDO::ATTR_PERSISTENT => false));
-		$this->dbh->beginTransaction();
-		$lnr=0;
-		
-		$tfile=$tdir=false;
-		$out_count=0;
-		$fout=false;
-	
-		if(false===($fin=fopen($this->config['file_in'],'r')))
-		    throw new OASParserWebserverStandardException("Cannot open <$file_in> for reading!");
-		
-		while(is_resource($fin) && !feof($fin)) {
-		    // read log file line by line
-		    
-		    $ldata_arr=array(); // container for parsed logfile lines
-		    
-		    while((count($ldata_arr)<$this->config['per_ent']) && false!==($line=fgets($fin))) {
-				// read up to $config[per_file] lines from config file
-				if($ldata=$this->parse_line($line, ++$lnr)) {
-				    $ldata_arr[]=$ldata;
-				}
-		    }
-		    
-		    // now initiate the asynchronous worker threads for the lines we've read
-		    if(count($ldata_arr)>0) {
-				if($this->config['async']) {
-				    $this->spawn_async($ldata_arr, $lnr);
-				} else {
-				    $this->parse_async($ldata_arr);
-				}
-		    }
-		}
-		$this->close_finished_async(true);
-		fclose($fin);
-		$this->dbh->commit();
+        function parse() {
+                $this->dbh = new PDO(
+                                $this->config['database'],
+                                $this->config['username'],
+                                $this->config['password'],
+                                array(PDO::ATTR_PERSISTENT => false));
+                $this->dbh->beginTransaction();
+                $lnr=0;
+
+                $tfile=$tdir=false;
+                $out_count=0;
+                $fout=false;
+
+                if(false===($fin=fopen($this->config['file_in'],'r')))
+                    throw new OASParserWebserverStandardException("Cannot open <$file_in> for reading!");
+
+                while(is_resource($fin) && !feof($fin)) {
+                    // read log file line by line
+                    
+                    $ldata_arr=array(); // container for parsed logfile lines
+                    
+                    while((count($ldata_arr)<$this->config['per_ent']) && false!==($line=fgets($fin))) {
+                                // read up to $config[per_file] lines from config file
+                                if($ldata=$this->parse_line($line, ++$lnr)) {
+                                    $ldata_arr[]=$ldata;
+                                }
+                    }
+                    
+                    // now initiate the asynchronous worker threads for the lines we've read
+                    if(count($ldata_arr)>0) {
+                                if($this->config['async']) {
+                                    $this->spawn_async($ldata_arr, $lnr);
+                                } else {
+                                    $this->parse_async($ldata_arr);
+                                }
+                    }
+                }
+                $this->close_finished_async(true);
+                fclose($fin);
+                $this->dbh->commit();
     }
 
     /**
@@ -69,42 +69,42 @@ class OASParserWebserverStandard extends OASParser {
      * @param $lnr line number
      */
     function spawn_async($values, $lnr) {
-		while(count($this->async_tasks) >= $this->config['maxchilds']) {
-		    $this->close_finished_async();
-		}
-		$data=array('pipes'=>array(), 'line'=>$lnr, 'out'=>'');
-		$data['res']=proc_open(
-			$this->config['callback'],
-			array(
-			    0 => array('pipe', 'r'),
-			    1 => array('pipe', 'w')
-			),
-			$data['pipes']);
-		if(!is_resource($data['res'])) {
-		    throw new OASParserWebserverStandardException("Cannot instanciate asynchronous worker process!");
-		} else {
-		    fwrite($data['pipes'][0], serialize($values)); // push values via stdin to worker process
-		    fclose($data['pipes'][0]);
-		    stream_set_blocking($data['pipes'][1], 0); // set output stream to non-blocking mode
-		    $this->async_tasks[]=$data;
-		}
+                while(count($this->async_tasks) >= $this->config['maxchilds']) {
+                    $this->close_finished_async();
+                }
+                $data=array('pipes'=>array(), 'line'=>$lnr, 'out'=>'');
+                $data['res']=proc_open(
+                        $this->config['callback'],
+                        array(
+                            0 => array('pipe', 'r'),
+                            1 => array('pipe', 'w')
+                        ),
+                        $data['pipes']);
+                if(!is_resource($data['res'])) {
+                    throw new OASParserWebserverStandardException("Cannot instanciate asynchronous worker process!");
+                } else {
+                    fwrite($data['pipes'][0], serialize($values)); // push values via stdin to worker process
+                    fclose($data['pipes'][0]);
+                    stream_set_blocking($data['pipes'][1], 0); // set output stream to non-blocking mode
+                    $this->async_tasks[]=$data;
+                }
     }
 
     /**
      * Read back data from asynchronous worker processes
      */
     function read_async_data() {
-		foreach(array_keys($this->async_tasks) as $id) {
-		    $write_streams=NULL;
-		    $except_streams=NULL;
-		    $read_streams=array($this->async_tasks[$id]['pipes'][1]);
-		    if(stream_select($read_streams, $write_streams, $except_streams, 0, 0)) {
-				foreach($read_streams as $stream) {
-				    $this->async_tasks[$id]['out'].=($read=fread($stream, 8192));
-				    //$this->_log("<L:{$this->async_tasks[$id]['line']}> READING: $read");
-				}
-		    }
-		}
+                foreach(array_keys($this->async_tasks) as $id) {
+                    $write_streams=NULL;
+                    $except_streams=NULL;
+                    $read_streams=array($this->async_tasks[$id]['pipes'][1]);
+                    if(stream_select($read_streams, $write_streams, $except_streams, 0, 0)) {
+                                foreach($read_streams as $stream) {
+                                    $this->async_tasks[$id]['out'].=($read=fread($stream, 8192));
+                                    //$this->_log("<L:{$this->async_tasks[$id]['line']}> READING: $read");
+                                }
+                    }
+                }
     }
 
     /**
@@ -112,24 +112,24 @@ class OASParserWebserverStandard extends OASParser {
      * @param $wait_for_all set true to wait for all worker processes to finish before closing
      */
     function close_finished_async($wait_for_all=false) {
-		do {
-		    $this->read_async_data();
-		    foreach(array_keys($this->async_tasks) as $id) {
-			$status = proc_get_status($this->async_tasks[$id]['res']);
-			if(!$status['running']) {
-				    stream_set_blocking($this->async_tasks[$id]['pipes'][1], 1); // set output stream to blocking mode
-				    while(!feof($this->async_tasks[$id]['pipes'][1])) {
-					$this->async_tasks[$id]['out'].=($read=fread($this->async_tasks[$id]['pipes'][1], 8192));
-					//$this->_log("<L:{$this->async_tasks[$id]['line']}> READING: $read");
-				    }
-				    fclose($this->async_tasks[$id]['pipes'][1]);
-				    proc_close($this->async_tasks[$id]['res']);
-				    $this->write_data($this->async_tasks[$id]['line'], $this->async_tasks[$id]['out']);
-				    unset($this->async_tasks[$id]);
-				}
-		    }
-		    usleep(100);
-		} while($wait_for_all && count($this->async_tasks));
+                do {
+                    $this->read_async_data();
+                    foreach(array_keys($this->async_tasks) as $id) {
+                        $status = proc_get_status($this->async_tasks[$id]['res']);
+                        if(!$status['running']) {
+                                    stream_set_blocking($this->async_tasks[$id]['pipes'][1], 1); // set output stream to blocking mode
+                                    while(!feof($this->async_tasks[$id]['pipes'][1])) {
+                                        $this->async_tasks[$id]['out'].=($read=fread($this->async_tasks[$id]['pipes'][1], 8192));
+                                        //$this->_log("<L:{$this->async_tasks[$id]['line']}> READING: $read");
+                                    }
+                                    fclose($this->async_tasks[$id]['pipes'][1]);
+                                    proc_close($this->async_tasks[$id]['res']);
+                                    $this->write_data($this->async_tasks[$id]['line'], $this->async_tasks[$id]['out']);
+                                    unset($this->async_tasks[$id]);
+                                }
+                    }
+                    usleep(100);
+                } while($wait_for_all && count($this->async_tasks));
     }
 
     /**
@@ -138,17 +138,22 @@ class OASParserWebserverStandard extends OASParser {
      * @param $ctxo CtxO to write to
      */
     function write_data($line, $ctxo) {
-		try {
-		    $stmt = $this->dbh->prepare('INSERT INTO '.$this->config['tablename'].' (timestamp, identifier, line, data) VALUES (?, ?, ?, ?)');
-		    $stmt->bindParam(1, time());
-		    $stmt->bindParam(2, $this->config['identifier']);
-		    $stmt->bindParam(3, $line);
-		    $stmt->bindParam(4, $ctxo);
-		    $stmt->execute();
-		    $this->_log("<L:$line> OK: context objects written to DB");
-		} catch (PDOException $e) {
-		    $this->_log("<L:$line> ERROR: cannot interface with database: ".$e->getMessage());
-		}
+                //This is ugly...
+                if(strlen(trim($ctxo)) == 0){
+                    $this->_log("<L:{$line}> Empty CTXO-Container. Skipped.");
+                   return;
+                }
+                try {
+                    $stmt = $this->dbh->prepare('INSERT INTO '.$this->config['tablename'].' (timestamp, identifier, line, data) VALUES (?, ?, ?, ?)');
+                    $stmt->bindParam(1, time());
+                    $stmt->bindParam(2, $this->config['identifier']);
+                    $stmt->bindParam(3, $line);
+                    $stmt->bindParam(4, $ctxo);
+                    $stmt->execute();
+                    $this->_log("<L:$line> OK: context objects written to DB");
+                } catch (PDOException $e) {
+                    $this->_log("<L:$line> ERROR: cannot interface with database: ".$e->getMessage());
+                }
     }
 
     /**
@@ -160,10 +165,13 @@ class OASParserWebserverStandard extends OASParser {
      * @param $values array of CtxO values
      */
     function parse_async($values) {
-                $initiated = false;
-                $ctxbuild=new CtxBuilder();
                 
-		foreach($values as $ldata) {
+                //Build xml-tree
+                $ctxbuild=new CtxBuilder();
+                $ctxbuild->setIndentString($this->config['indent']);
+                $ctxbuild->start();
+                
+                foreach($values as $ldata) {
                     
                     //Get details 
                     $ldata['details']=$this->get_document_details($ldata['document_url']);
@@ -172,33 +180,28 @@ class OASParserWebserverStandard extends OASParser {
                     if(!($this->config['send_anys'])){
                         
                         //If we want to exclude anys, (!$config[send_anys]) don't exclude robots.txt
-                        if(!(pathinfo(parse_url($ldata['document_url'],PHP_URL_PATH),PATHINFO_FILENAME) == "robots.txt")) {
-                            
+                        if(!(pathinfo(parse_url($ldata['document_url'],PHP_URL_PATH),PATHINFO_BASENAME) == "robots.txt")) {
                             foreach($ldata['details']['types'] as $type){
                                 if($type == "any"){
-                                    //$this->_log("<L:{$ldata['line']}> Skipped 'any'-document");
-                                    continue 2; //Skip this foreach, and the next foreach
+                                    //$this->_log("<L:{$ldata['line']}> Skipped 'any'-document: " . parse_url($ldata['document_url'],PHP_URL_PATH));
+                                    continue 2; //Skip this foreach, and the other foreach
                                 }
                             }
-                        }else{
-                            $this->_log("<L:{$ldata['line']}> found a robots.txt !!!");
-                            
-                            
                         }
                         
                     }
                     
                     /* IP <-> Hostname */
-		    if(!$ldata['ip']) {
-			    $ldata['ip'] = gethostbyname($ldata['hostname']);
-		    } else {
-			    $ldata['hostname'] = gethostbyaddr($ldata['ip']);
-		    }
-		    
-		    if(!OASParser::is_ip($ldata['ip'])) {
-			    $this->_log("<L:{$ldata['line']}> Log Entry: cannot resolve hostname '{$ldata['ip']}'");
-			    continue;
-		    }
+                    if(!$ldata['ip']) {
+                            $ldata['ip'] = gethostbyname($ldata['hostname']);
+                    } else {
+                            $ldata['hostname'] = gethostbyaddr($ldata['ip']);
+                    }
+                    
+                    if(!OASParser::is_ip($ldata['ip'])) {
+                            $this->_log("<L:{$ldata['line']}> Log Entry: cannot resolve hostname '{$ldata['ip']}'");
+                            continue;
+                    }
                     
                     $ctx=array(
                         'status'=>$ldata['status'],
@@ -218,31 +221,17 @@ class OASParserWebserverStandard extends OASParser {
                         'service_types'=>$ldata['details']['types']
                         );
                     
-                    //If all objects were skipped dont build the main-tree
-                    if(!$initiated)
-                    {
-                        $initiated = true;
-                        
-                        //Build xml-tree
-                        $ctxbuild->setIndentString($this->config['indent']);
-                        $ctxbuild->start();
-                    }else{
-                        //Only if initiated
-                        $ctxbuild->add_ctxo($ctx);
-                    }
+                    $ctxbuild->add_ctxo($ctx);
                     
-		}
+                }
                 
-                //Only if initiated
-                if($initiated){
-                    $ctxbuild->done();
-                    if($this->config['async']) {
-                        echo $ctxbuild->outputMemory();
-                        fclose(STDOUT);
-                        die();
-                    } else {
-                        $this->write_data($ldata['line'],$ctxbuild->outputMemory());
-                    }
+                $ctxbuild->done();
+                if($this->config['async']) {
+                    echo $ctxbuild->outputMemory();
+                    fclose(STDOUT);
+                    die();
+                } else {
+                    $this->write_data($ldata['line'],$ctxbuild->outputMemory());
                 }
     }
 
@@ -254,14 +243,14 @@ class OASParserWebserverStandard extends OASParser {
      * @return string return value of mkdir
      */
     function mkdir_recursive($dir,$mode=0777) {
-		if($dir=='.')
-		    return true;
-		if($d=dirname($dir))
-		    if(!$this->mkdir_recursive($d))
-			return false;
-		if(is_dir($dir))
-		    return true;
-		return mkdir($dir,$mode);
+                if($dir=='.')
+                    return true;
+                if($d=dirname($dir))
+                    if(!$this->mkdir_recursive($d))
+                        return false;
+                if(is_dir($dir))
+                    return true;
+                return mkdir($dir,$mode);
     }
     
     /**
@@ -275,7 +264,7 @@ class OASParserWebserverStandard extends OASParser {
      * @return bool always false if not implemented
      */
     function get_document_details($document) {
-	    return false;
+            return false;
     }
 
     /**
@@ -289,50 +278,50 @@ class OASParserWebserverStandard extends OASParser {
      * @return array always empty if not implemented
     */
     function get_requester_classification($ip) {
-	    return array();
+            return array();
     }
 
-	/**
-	 * Parse one line of the logfile
-	 *
-	 * @param $line text of the logfile line to parse
-	 * @param $lnr line number
-	 * @return array of values for CtxO building
-	 */
+        /**
+         * Parse one line of the logfile
+         *
+         * @param $line text of the logfile line to parse
+         * @param $lnr line number
+         * @return array of values for CtxO building
+         */
     function parse_line($line, $lnr) {
-		$val=array('line'=>$lnr);
-		
-		/*               host/ip     user    realm       date       query     status    size     referer   useragent  
-		if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"([^"]+)" +([^ ]+) +([^ ]+) +"([^"]*)" +"([^"]*)"$/', trim($line), $match)) {
+                $val=array('line'=>$lnr);
+
+                /*               host/ip     user    realm       date       query     status    size     referer   useragent  
+                if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"([^"]+)" +([^ ]+) +([^ ]+) +"([^"]*)" +"([^"]*)"$/', trim($line), $match)) {
                         $this->_log("<L:$lnr> Ignore malformed log entry: $line");
                         return false;
-		}*/
+                }*/
                 
                 //              host/ip     user    realm       date             query         status   size         referer       useragent 
                 if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"(..*?)(?<!\\\\)" +([^ ]+) +([^ ]+) +"(.*?)(?<!\\\\)" +"([^"]*)"$/' , trim($line), $match)) {
                         $this->_log("<L:$lnr> Ignore malformed log entry: $line");
                         return false;
-		}
+                }
                 
-		/* Statuscode */
-		if(!$this->statuscode_filter($val['status']=$match[6])) {
-			$this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}");
-			return false;
-		}
+                /* Statuscode */
+                if(!$this->statuscode_filter($val['status']=$match[6])) {
+                        $this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}");
+                        return false;
+                }
                 
                 /* HTTP-Infos zum abgerufenen Dokument */
-		$http_data=split(' ',$match[5]);
-		$val['method']=$http_data[0]; /* Query method */
-		if(!$this->method_filter($val['method'])) {
-			$this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.");
-			return false;
-		}
-		$val['document_url']=$http_data[1]; /* abgerufenes Dokument */
+                $http_data=split(' ',$match[5]);
+                $val['method']=$http_data[0]; /* Query method */
+                if(!$this->method_filter($val['method'])) {
+                        $this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.");
+                        return false;
+                }
+                $val['document_url']=$http_data[1]; /* abgerufenes Dokument */
                 
-                /* Dateiendungsüberprüfung */
+                /* DateiendungsÃ¼berprÃ¼fung */
                 $fileextension =  strtolower(pathinfo(parse_url($val['document_url'],PHP_URL_PATH),PATHINFO_EXTENSION));
                 
-                /*  Dateien, die unwesentlich für den Serviceprovicer sind
+                /*  Dateien, die unwesentlich fÃ¼r den Serviceprovicer sind
                  *  sollen gefiltert werden */ 
                 foreach ($this->config['extensionfilter'] as $forbiddenextention) {
                     if($fileextension==$forbiddenextention){
@@ -340,21 +329,21 @@ class OASParserWebserverStandard extends OASParser {
                         return false;
                     }
                 }
-		
-		/* IP <-> Hostname */ // eigentliche Auflösung verschoben in asynchrone Bearbeitung
-		if(!$this->is_ip($match[1])) {
-			$val['hostname'] = $match[1];
-			$val['ip'] = false;
-		} else {
-			$val['ip'] = $match[1];
-			$val['hostname'] = false;
-		}
-	
-		/* Zeit/Datum */
-		$val['time']=strtotime($match[4]);
-	
-		/* Uebertragene Daten */
-		$val['size'] = $match[7];
+
+                /* IP <-> Hostname */ // eigentliche AuflÃ¶sung verschoben in asynchrone Bearbeitung
+                if(!$this->is_ip($match[1])) {
+                        $val['hostname'] = $match[1];
+                        $val['ip'] = false;
+                } else {
+                        $val['ip'] = $match[1];
+                        $val['hostname'] = false;
+                }
+
+                /* Zeit/Datum */
+                $val['time']=strtotime($match[4]);
+
+                /* Uebertragene Daten */
+                $val['size'] = $match[7];
                 
                 /* Dateiformat; MIME */
                 switch($fileextension)
@@ -379,13 +368,13 @@ class OASParserWebserverStandard extends OASParser {
                      break;
                 }
                 $val['document_type'] = $itemformat;
-		
-		/* Referer-Auswertung */
-		$val['referer']=$match[8];
-	
-		/* User-Agent */
-		$val['user-agent']=$match[9];
-		
-		return $val;
+
+                /* Referer-Auswertung */
+                $val['referer']=$match[8];
+
+                /* User-Agent */
+                $val['user-agent']=$match[9];
+
+                return $val;
     }
 }

@@ -3,9 +3,6 @@
  * Library containing functions that deal with specifica of the
  * DSpace document server of the SUB Goettingen, Germany
  * 
- * This php has to be changed to make it fit for your particular
- * repository
- * 
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser

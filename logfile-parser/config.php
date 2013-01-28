@@ -13,9 +13,9 @@
 include "lib/.new";
 
 $config=array(
-	/* which parser to use; this depends on your repository.
-         * We provide an DSpace example*/
-	'parser'	=> 'OASParserWebserverDSpace',
+	// which parser to use 
+        //DO NOT CHANGE WANTED PARSER HERE! THIS IS FALLBACK!
+	'parser'	=> 'OASParserWebserverStandard',
 	// salt for hashes
 	'hashsalt'	=> $salt,
 	// context objects in a contextobjects container
@@ -23,9 +23,9 @@ $config=array(
 	// PDO database connection string
 	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider_demo',
 	// db user
-	'username'      => 'ENTER_DB_USERNAME',
+	'username'      => 'oas_demo',
 	// db password
-	'password'      => 'ENTER_DB_PASSWORD',
+	'password'      => 'oas_demo',
 	// name of the table within the database
 	'tablename'	=> 'contextobjects',
 	// where to read data from
@@ -40,6 +40,9 @@ $config=array(
 	'identifier'    => 'oai:demo',
 	// the service_id for annotating the context object
 	'service_id'	=> 'http://www.oas_demo.de/oastatistik',
+    
+        //This is specific for broken OAI PMH Implementations.
+        'full_harvest'	=> false,
         
         //the fileextensions, which should be ignored, because they're not relevant
         //for the service provider. If your repository offers files which are listed
