@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /** 
  * Default configuration
  * 
@@ -25,7 +25,7 @@ $config=array(
 	// salt for hashes
 	'hashsalt'	=> $salt,
 	// context objects in a contextobjects container
-	'per_ent'	=> 100,
+	'per_ent'	=> 50,
 	// PDO database connection string
 	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider_demo',
 	// db user
