@@ -39,18 +39,17 @@ class OASParserWebserverStandard extends OASParser {
 
                 while(is_resource($fin) && !feof($fin)) {
                     // read log file line by line
-                    
                     $ldata_arr=array(); // container for parsed logfile lines
                     
                     while((count($ldata_arr)<$this->config['per_ent']) && false!==($line=fgets($fin))) {
                                 // read up to $config[per_file] lines from config file
-                                if($ldata=$this->parse_line($line, ++$lnr)) {
+                                if(false!==($ldata=$this->parse_line($line, ++$lnr))) {
                                     $ldata_arr[]=$ldata;
                                 }
                     }
                     
                     // now initiate the asynchronous worker threads for the lines we've read
-                    if(count($ldata_arr)>0) {
+                    if(count($ldata_arr)>0) {       
                                 if($this->config['async']) {
                                     $this->spawn_async($ldata_arr, $lnr);
                                 } else {
@@ -139,8 +138,11 @@ class OASParserWebserverStandard extends OASParser {
      */
     function write_data($line, $ctxo) {
                 //Check if empty dataset
-                if(strlen(trim($ctxo)) == 0){
-                    $this->_log("<L:{$line}> Empty CTXO-Container. Skipped.");
+
+                //Empty sets seem to be 3 chars (187,239,191). This is unbelievable dirty, but... it has to be done.
+                if( strlen(trim($ctxo,chr(187).chr(239).chr(191)))<=0){
+                    $this->_log("<L:{$line}> Empty CTXO-Container. Skip.");
+                    
                    return;
                 }
                 
@@ -199,7 +201,7 @@ class OASParserWebserverStandard extends OASParser {
                 $ctxbuild=new CtxBuilder();
                 $ctxbuild->setIndentString($this->config['indent']);
                 $ctxbuild->start();
-                
+                                
                 foreach($values as $ldata) {
                     
                     //Get details 

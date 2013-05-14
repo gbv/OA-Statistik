@@ -192,4 +192,13 @@ class CtxBuilder extends MyXmlWriter {
         return $this->output_count;
     }
     
+    function outputMemory($flush = true,$force=false) {
+        $out = parent::outputMemory($flush);
+        
+        if(($this->count_ctxo() > 0) || $force)
+        {
+            return $out;
+        }
+    }
+    
 } 
