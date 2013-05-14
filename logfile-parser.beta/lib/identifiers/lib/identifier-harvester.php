@@ -69,7 +69,7 @@ class IdentifierHarvester extends OAIHarvester {
 			$this->_log("Found DC:Identifier <$dc_identifier>");
 			if(false!==strpos($dc_identifier,' ')) {
 				// identifier contains spaces, so it possibly is some other kind of metadata
-				$this->_log('ignored identifier, since it does not to be a technical one.');
+				$this->_log("ignored identifier, since it doesn't seem to be a technical one.");
 				continue;
 			} elseif(preg_match('/^[0-9]{4}-[0-9]{3}[0-9X]/',$dc_identifier)) {
 				// identifier is an ISSN (we guess so....)
