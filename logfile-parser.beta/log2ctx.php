@@ -5,10 +5,10 @@
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 1.3
+ * @version 1.3.1
  */
 
-$version='1.3';
+$version='1.3.1';
 
 // Check if required PHP extensions are available
 if(!function_exists('preg_match'))
@@ -134,7 +134,16 @@ if(isset($options['O'])) {
     }
     
     
+    try{
+        mkdir('./data/');
+    }catch(Exception $e) {
+                    logger('Unable to create directory "./data/" with "chmod 0700". This is needed for the sqlite cache ');
+                    logger('"'.$config['db_identifier'].'!"');
+    }
+    
+    
     logger( "\nOK.\n");
+    
 } elseif(@$options['R']) {
     // special case: remove old data sets
     if($options['R']==='all') {
