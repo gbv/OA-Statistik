@@ -2,26 +2,35 @@
 /**
  * Parser for lines from standard webserver log files
  *
- * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB GÃ¶ttingen
+ * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB G�?¶ttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 0.4 Marc Giesmann, 17.04.2013
+ * @version 0.4.2 Marc Giesmann, 29.05.2013
  */
 
 require_once(dirname(__FILE__).'/oasparser.php');
 require_once(dirname(__FILE__).'/logutils.php');
 require_once(dirname(__FILE__).'/ctxbuilder.php');
+require_once(dirname(__FILE__).'/ctxcontainer.php');
+
+require_once(dirname(__FILE__).'/logstats.php');
 
 class OASParserWebserverStandardException extends Exception {}
 
 class OASParserWebserverStandard extends OASParser {
     
-        var $async_tasks=array();
-        var $writecounter = 0;
+        var $async_tasks = array();
+        var $ctxo_stack  = array();
+        
+        var $logstats;
+        
     /**
      * Parse the logfile
      */
         function parse() {
+                $this->logstats = new LogStats();
+            
+            
                 $this->dbh = new PDO(
                                 $this->config['database'],
                                 $this->config['username'],
@@ -58,6 +67,11 @@ class OASParserWebserverStandard extends OASParser {
                     }
                 }
                 $this->close_finished_async(true);
+                
+                //Flush buffers
+                $this->write_data(-1, NULL, true);
+                $this->_log($this->logstats->getCompleteStats());  
+                
                 fclose($fin);
                 $this->dbh->commit();
     }
@@ -123,7 +137,7 @@ class OASParserWebserverStandard extends OASParser {
                                     }
                                     fclose($this->async_tasks[$id]['pipes'][1]);
                                     proc_close($this->async_tasks[$id]['res']);
-                                    $this->write_data($this->async_tasks[$id]['line'], $this->async_tasks[$id]['out']);
+                                    $this->write_data($this->async_tasks[$id]['line'], unserialize($this->async_tasks[$id]['out']));
                                     unset($this->async_tasks[$id]);
                                 }
                     }
@@ -134,56 +148,86 @@ class OASParserWebserverStandard extends OASParser {
     /**
      * Write Context Object data to database
      * @param $line line to write
-     * @param $ctxo CtxO to write to
+     * @param $ctxo CtxO-Array needs
+     *        ctxo array: $ctxo['ctxos']
+     *        logs array: $ctxo['logstats'] 
      */
-    function write_data($line, $ctxo) {
-                //Check if empty dataset
-
-                //Empty sets seem to be 3 chars (187,239,191). This is unbelievable dirty, but... it has to be done.
-                if( strlen(trim($ctxo,chr(187).chr(239).chr(191)))<=0){
-                    $this->_log("<L:{$line}> Empty CTXO-Container. Skip.");
-                    
-                   return;
-                }
+    function write_data($line, $ctxo=array(),$flush=false) {
                 
-                try {
-                    $stmt = $this->dbh->prepare('INSERT INTO '.$this->config['tablename'].' (timestamp, identifier, line, data) VALUES (?, ?, ?, ?)');
-                    $stmt->bindParam(1, time());
-                    $stmt->bindParam(2, $this->config['identifier']);
-                    $stmt->bindParam(3, $line);
-                    $stmt->bindParam(4, $ctxo);
-                    $stmt->execute();
+        //If flush is set, just write everything left in the buffer
+        if($flush){
+            
+            //Write everything left to database
+            $this->_log("<L:{$line}>"."FLUSH BUFFERS TO DB...");
+            
+            //Is something in here?
+            if(count($this->ctxo_stack)==0){
+                $this->_log("<L:{$line}>"."Stack is empty, nothing to flush.");
+                
+                return;
+            }
+            
+            //To database
+            $todatabase = $this->ctxo_stack;
+            
+            }else{
+                
+                //Including stats whic happened in async process
+                $this->logstats->combineStat($ctxo['logstats']);
+                $ctxo = $ctxo['ctxos'];
+                
+                //Anything in there?
+                if(count($ctxo)==0)
+                    return;
+                
+                //Combine new ctxos with current stack
+                $workingstack = array_merge($this->ctxo_stack,$ctxo);
+                
+                //$this->_log("<L:{$line}> Writingattempt: ". count($this->ctxo_stack). " oldstacksize, going to add ".count($threadctxostack).'.');
+                //$this->_log("<L:{$line}> Additionstack now is " . count($workingstack));
+                
+                //Reset main stack
+                unset($this->ctxo_stack);
+                $stacksize = count($workingstack);
+                
+                //Only write config['per_ent'] Contextobjects to database, when stack is big enough (stack >= 'per_ent')
+                if($stacksize>=$this->config['per_ent']){
+                    $todatabase       = array_slice($workingstack,0, $this->config['per_ent']);
+                    $this->ctxo_stack = array_slice($workingstack,$this->config['per_ent']);
                     
-                    
-                    //TODO for warningcheck:
-                    //What if we've got 15 records, and the last 3 were corrupt?
-                    //The "$this-writecounter % 10 == 0" stuff wouldn't work
-                    
-                    /*
-                    //periodically check for warnings
-                    if ($this->writecounter % 10 == 0) {
-                        foreach($this->dbh->query('SELECT @@warning_count') as $row) {
-                            $row = array_pop($row);
-                            
-                            if ($row < 1) break; # no warning, go on
-                            
-                            foreach($this->dbh->query('SHOW WARNINGS') as $err) {
-                                //print_r($err);
-                                $this->_log("<L:$line> ----------- WARNING!!!!!! ---------------");
-                                $this->_log(sprintf(">> MySQL Warning: [%d]\t%s\n", $err[1], $err[2]));
-                            };
-                        };
-                    };
-                    
-                    
-                    $this->_log("<L:$line> OK: context objects written to DB");
-                    $this->writecounter++;
-                      
-                    */
-                     
-                    } catch (PDOException $e) {
-                        $this->_log("<L:$line> ERROR: cannot interface with database:".$e->getMessage());
-                    }
+                }else{
+                    $this->ctxo_stack = $workingstack;
+                    return; //Nothing to do here, stack isn't big enough
+                }
+        }
+        
+        //When code reaches this far, we're going to write
+
+        //Build xml-tree
+        $ctxcontainer=new CtxContainer();
+        $ctxcontainer->setIndentString($this->config['indent']);
+        $ctxcontainer->start();
+
+        foreach($todatabase as $ctxo){
+            $ctxcontainer->addCtxo($ctxo);
+        }
+
+        try {
+            $stmt = $this->dbh->prepare('INSERT INTO '.$this->config['tablename'].' (timestamp, identifier, line, data) VALUES (?, ?, ?, ?)');
+            $stmt->bindParam(1, time());
+            $stmt->bindParam(2, $this->config['identifier']);
+            $stmt->bindParam(3, $line);
+            $stmt->bindParam(4,$ctxcontainer->getXML());
+            $stmt->execute();
+            
+            //Log happenings
+            $this->_log("<L:$line> OK: ".$ctxcontainer->countCtxos()." context objects written to DB");
+            $this->logstats->addStat('Database Accesses', '');
+            $this->logstats->addStat('Contextobjects'   , '' ,$ctxcontainer->countCtxos());
+
+            } catch (PDOException $e) {
+                $this->_log("<L:$line> ERROR: cannot interface with database:".$e->getMessage());
+            }
      
     }
 
@@ -196,14 +240,12 @@ class OASParserWebserverStandard extends OASParser {
      * @param $values array of CtxO values
      */
     function parse_async($values) {
+                $threadctxostack             = array();
+                $threadctxostack['ctxos']    = array();
+                $threadctxostack['logstats'] = new LogStats();
                 
-                //Build xml-tree
-                $ctxbuild=new CtxBuilder();
-                $ctxbuild->setIndentString($this->config['indent']);
-                $ctxbuild->start();
-                                
+                
                 foreach($values as $ldata) {
-                    
                     //Get details 
                     $ldata['details']=$this->get_document_details($ldata['document_url']);
 
@@ -215,6 +257,7 @@ class OASParserWebserverStandard extends OASParser {
                             foreach($ldata['details']['types'] as $type){
                                 if($type == "any"){
                                     //$this->_log("<L:{$ldata['line']}> Skipped 'any'-document: " . parse_url($ldata['document_url'],PHP_URL_PATH));
+                                    $threadctxostack['logstats']->addStat('Loglines Skipped', 'ANY document');
                                     continue 2; //Skip this foreach, and the other foreach
                                 }
                             }
@@ -235,19 +278,7 @@ class OASParserWebserverStandard extends OASParser {
                             //Hostadress Fallback Method 1
                             $ldata['ip'] = $ldata['hostname'];
                             
-                            //Hostadress Fallback Method 2
-                            /*$flDomain = OASParser::get_first_level_domain($ldata['hostname']);
-                            $this->_log("\t<L:{$ldata['line']}> Log Entry: fallback; new hosturl is '{$flDomain}'");
-                            $ldata['ip'] = gethostbyaddr($flDomain);
-                            
-                            //Did it work?
-                            if(!OASParser::is_ip($ldata['ip'])) {
-                                $this->_log("\t<L:{$ldata['line']}> Log Entry: Fallback failed! cannot resolve hostname '{$flDomain}'");
-                            
-                                continue;
-                            }
-                             * 
-                             */
+                            $threadctxostack['logstats']->addStat('Notices', 'Hostname fallback used');
                     }
                     
                     $ctx=array(
@@ -268,17 +299,22 @@ class OASParserWebserverStandard extends OASParser {
                         'service_types'=>$ldata['details']['types']
                         );
                     
+                    //Build xml-tree
+                    $ctxbuild=new CtxBuilder();
+                    $ctxbuild->setIndentString($this->config['indent']);
+                    
                     $ctxbuild->add_ctxo($ctx);
                     
+                    //Add ctxo to threadstack
+                    $threadctxostack['ctxos'][] = $ctxbuild;
                 }
-                
-                $ctxbuild->done();
+               
                 if($this->config['async']) {
-                    echo $ctxbuild->outputMemory();
+                    echo serialize($threadctxostack);
                     fclose(STDOUT);
                     die();
                 } else {
-                    $this->write_data($ldata['line'],$ctxbuild->outputMemory());
+                    $this->write_data($ldata['line'],$threadctxostack);
                 }
     }
 
@@ -337,6 +373,8 @@ class OASParserWebserverStandard extends OASParser {
          */
     function parse_line($line, $lnr) {
                 $val=array('line'=>$lnr);
+                $this->logstats->addStat('Loglines parsed', '');
+                
 
                 /*               host/ip     user    realm       date       query     status    size     referer   useragent  
                 if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"([^"]+)" +([^ ]+) +([^ ]+) +"([^"]*)" +"([^"]*)"$/', trim($line), $match)) {
@@ -347,12 +385,14 @@ class OASParserWebserverStandard extends OASParser {
                 //              host/ip     user    realm       date             query         status   size         referer       useragent 
                 if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"(..*?)(?<!\\\\)" +([^ ]+) +([^ ]+) +"(.*?)(?<!\\\\)" +"([^"]*)"$/' , trim($line), $match)) {
                         $this->_log("<L:$lnr> Ignore malformed log entry: $line");
+                        $this->logstats->addStat('Loglines Skipped', 'Malformed line');
                         return false;
                 }
                 
                 /* Statuscode */
                 if(!$this->statuscode_filter($val['status']=$match[6])) {
-                        $this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}");
+                        //$this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}");
+                        $this->logstats->addStat('Loglines Skipped', 'Invalid HTTP status ('.$val['status'].')');
                         return false;
                 }
                 
@@ -360,24 +400,26 @@ class OASParserWebserverStandard extends OASParser {
                 $http_data=split(' ',$match[5]);
                 $val['method']=$http_data[0]; /* Query method */
                 if(!$this->method_filter($val['method'])) {
-                        $this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.");
+                        //$this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.");
+                        $this->logstats->addStat('Loglines Skipped', 'Invalid HTTP method ('.$val['method'].')');
                         return false;
                 }
                 $val['document_url']=$http_data[1]; /* abgerufenes Dokument */
                 
-                /* DateiendungsÃ¼berprÃ¼fung */
+                /* Dateiendungs�?¼berpr�?¼fung */
                 $fileextension =  strtolower(pathinfo(parse_url($val['document_url'],PHP_URL_PATH),PATHINFO_EXTENSION));
-                
-                /*  Dateien, die unwesentlich fÃ¼r den Serviceprovicer sind
+
+                /*  Dateien, die unwesentlich f�?¼r den Serviceprovicer sind
                  *  sollen gefiltert werden */ 
                 foreach ($this->config['extensionfilter'] as $forbiddenextention) {
                     if($fileextension==$forbiddenextention){
                         //$this->_log("<L:$lnr> Ignore since .".$forbiddenextention."-files are not relevant for serviceprovider.");
+                        $this->logstats->addStat('Loglines Skipped', 'Invalid extension ('.$forbiddenextention.')');
                         return false;
                     }
                 }
 
-                /* IP <-> Hostname */ // eigentliche AuflÃ¶sung verschoben in asynchrone Bearbeitung
+                /* IP <-> Hostname */ // eigentliche Aufl�?¶sung verschoben in asynchrone Bearbeitung
                 if(!$this->is_ip($match[1])) {
                         $val['hostname'] = $match[1];
                         $val['ip'] = false;

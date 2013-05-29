@@ -2,16 +2,16 @@
 /**
  * Own XML writer class to overcome the shortcomings of the original PHP class
  *
- * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB GÃ¶ttingen
+ * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 0.1
+ * @version 0.2
  */
 
 class MyXmlWriter {
    
     var $buffer='';
-    var $indent='';
+    var $indent='   ';
     var $stack=array();
     
     /**
@@ -21,11 +21,31 @@ class MyXmlWriter {
 		$this->buffer='';
 		$this->stack=array();
     }
+        
+      /**
+     * Appends memory to internal buffer.
+     * XML Writer Objects 
+     * @param $append XML text which should be appended  
+     */
+    function appendRawXML($append)
+    {
+       $this->addContent($append,false);
+    }
     
-	/**
-	 * Set indent string
-	 * @param $indent set the string used for XML indentation
-	 */
+     /**
+     * Appends xml to internal buffer.
+     * XML Writer Objects 
+     * @param $append myxmlwriter object, which should be appended 
+     */
+    function appendXML($append)
+    {
+       $this->addContent($append->outputMemory(),false);
+    }
+    
+    /**
+     * Set indent string
+     * @param $indent set the string used for XML indentation
+     */
     function setIndentString($indent) {
 		$this->indent=$indent;
     }
@@ -36,7 +56,18 @@ class MyXmlWriter {
      * @param $encoding optional: character encoding if differing from UTF-8
      */
     function startDocument($version="1.0", $encoding="UTF-8") {
-		$this->buffer.='<?xml version="'.$version.'" encoding="'.$encoding.'" ?>'."\n";
+		$this->buffer.='<?xml version="'.$version.'" ?>'."\n";
+    }
+    
+    /**
+     * Creates a new Processing instruction. Needs to be specified
+     * directly after "startDocument"!! Useful for embedding stylsheets.
+     * @param instructionTarget
+     * @param $data optional: Sepcial information
+     */
+    function createProcessingInstruction($target,$data=""){
+        $this->buffer.="<?".$target." ".$data."?>"."\n";
+        
     }
     
     /**
@@ -46,49 +77,58 @@ class MyXmlWriter {
      * @param $nsuri namespace URI
      */
     function startElementNS($prefix,$name,$nsuri) {
-		// Close tag if open
+        
+        // Close tag if open
         if($ssize=count($this->stack)) {
-		    if($this->stack[$ssize-1]['o']) {
-				$this->buffer.=">".($this->indent?"\n":'');
-				$this->stack[$ssize-1]['o']=false;
-		    }
-		}	
-		
-		// Start new tag
-		// Indent
-		for($i=0;$i<$ssize;$i++) $this->buffer.=$this->indent;
-		
-		$this->buffer.='<';
-	
-		// Add prefix if missing
-		if($prefix!==NULL) $this->buffer.=$prefix.':';
-		
-		$this->buffer.=$name;
-	
-		// Add namespace declaration if missing
-		if($nsuri!==NULL && (!$ssize || ($this->stack[$ssize-1]['u']!=$nsuri)))
-		    $this->buffer.=' xmlns'.(($prefix!==NULL)?(':'.$prefix):'').'="'.$nsuri.'"';
-		
-		$this->stack[$ssize]=array(
-			'o'=>true,
-			'n'=>$name,
-			'u'=>$nsuri,
-			'p'=>$prefix,
-			't'=>false
-		);
+            if($this->stack[$ssize-1]['o']) {
+                        $this->buffer.=">".($this->indent?"\n":'');
+                        $this->stack[$ssize-1]['o']=false;
+            }
+        }	
+
+        // Start new tag
+        // Indent
+        for($i=0;$i<$ssize;$i++) $this->buffer.=$this->indent;
+
+        $this->buffer.='<';
+
+        // Add prefix if missing
+        if($prefix!==NULL) $this->buffer.=$prefix.':';
+
+        $this->buffer.=$name;
+
+        // Add namespace declaration if missing
+        if($nsuri!==NULL && (!$ssize || ($this->stack[$ssize-1]['u']!=$nsuri)))
+            $this->buffer.=' xmlns'.(($prefix!==NULL)?(':'.$prefix):'').'="'.$nsuri.'"';
+
+        $this->stack[$ssize]=array(
+                'o'=>true,
+                'n'=>$name,
+                'u'=>$nsuri,
+                'p'=>$prefix,
+                't'=>false
+        );
     }
     
     /**
      * Add text to the current element
      * @param $text text to add
+     * @param $inputShouldBeNormalized optional: If xml or special code fragments should be
+     *        appended, set to false
      */
-    function addContent($text) {
+    function addContent($text,$inputShouldBeNormalized = true) {
+        
 		if($this->stack[($ssize=count($this->stack))-1]['o']) {
 		    $this->buffer.='>';
 		    $this->stack[$ssize-1]['o']=false;
 		}
 		$this->stack[$ssize-1]['t']=true;
-		$this->buffer.=str_replace(array('&','<','>'),array('&amp;','&lt;','&gt;'),$text);
+                
+                if($inputShouldBeNormalized){
+                    $this->buffer.=str_replace(array('&','<','>'),array('&amp;','&lt;','&gt;'),$text);
+                }else{
+                    $this->buffer.=$text;
+                }
     }
 	
     /**
@@ -110,7 +150,7 @@ class MyXmlWriter {
 				}
 				$this->buffer.='</'.(($e['p']!==NULL)?($e['p'].':'):'').$e['n'].">".($this->indent?"\n":'');
 		   	}
-		    unset($this->stack[$ssize-1]);
+                        unset($this->stack[$ssize-1]);
 		}
     }
 
@@ -121,9 +161,9 @@ class MyXmlWriter {
      * @param $nsuri namespace URI
      * @param $content text to add
      */
-    function writeElementNS($prefix,$name,$nsuri,$content) {
-		$this->startElementNS($prefix,$name,$nsuri);
-		$this->addContent($content);
+    function writeElementNS($prefix,$name,$nsuri,$content,$replace = true) {
+        $this->startElementNS($prefix,$name,$nsuri);
+		$this->addContent($content,$replace);
 		$this->endElement();
     }
 
@@ -132,7 +172,7 @@ class MyXmlWriter {
      * @param $name element name
      */
     function startElement($name) {
-		$this->startElementNS(NULL,$name,NULL);
+	$this->startElementNS(NULL,$name,NULL);
     }
 
     /**

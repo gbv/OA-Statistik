@@ -6,7 +6,7 @@
  * @edited by Marc Giesmann
  * @package data-provider
  * @subpackage logfile-parser
- * @version 0.2
+ * @version 0.3
  */
 
 require_once(dirname(__FILE__).'/myxmlwriter.php');
@@ -22,54 +22,18 @@ define('XMLNS_OASRI', 'http://dini.de/namespace/oas-requesterinfo');
 define('XMLSCHEMALOC_CTX', 'http://www.openurl.info/registry/docs/xsd/info:ofi/fmt:xml:xsd:ctx');
 
 class CtxBuilder extends MyXmlWriter {
-    var $output_count=0;
     var $first_time=false;
     var $last_time=false;
     
     /**
-     * Starts a new context objects container
-     * @param $starttime optional, just for downward compatibility
-     * @param $endtime optional, just for downward compatibility
-     * @param $count optional, just for downward compatibility
-     */
-    function start($starttime=false, $endtime=false, $count=false) {
-		$this->openMemory();
-		
-		// we omit the XML declaration, thus producing invalid XML snippets.
-		// but we need to do that in order to more easily include them when
-		// offering them via the OAI-PMH data provider
-		//$this->startDocument('1.0', 'UTF-8');
-	
-		$this->startElementNS(NULL,'context-objects',XMLNS_CTX);
-		$this->writeAttributeNS('xsi','schemaLocation',XMLNS_SCHEMA,XMLNS_CTX.' '.XMLSCHEMALOC_CTX);
-	
-		// Commented out since not applicable to streams
-		// <administration> can never appear at the end of a <context-objects> container, thus optional
-		//$this->startElementNS(NULL,'administration',XMLNS_CTX);
-		//$this->writeElementNS(NULL,'format',XMLNS_CTX,XMLNS_OASA);
-		//$this->startElementNS(NULL,'oa-statistics',XMLNS_OASA);
-		//$this->writeElementNS(NULL,'starttime',XMLNS_OASA,$starttime);
-		//$this->writeElementNS(NULL,'endtime',XMLNS_OASA,$endtime);
-		//$this->writeElementNS(NULL,'count',XMLNS_OASA,$count);
-		//$this->endElement(); // oa-statistics
-		//$this->endElement(); // administration
-    }
-
-    /**
-     * Resets the container, deletes all context objects
-     */
-    function reset() {
-		$this->openMemory();
-		$this->output_count=0;
-		$this->first_time=false;
-		$this->last_time=false;
-    }
-
-    /**
-     * Adds a context object to the container
+     * Creates a ctxo out of given parameters
      * @param $data xml data to add
      */
     function add_ctxo($data) {
+                //Init
+                $this->openMemory();
+        
+        
 		if(!$this->first_time)
 		    $this->first_time=$data['time'];
 		$this->last_time=$data['time'];
@@ -169,13 +133,6 @@ class CtxBuilder extends MyXmlWriter {
     }
 
     /**
-     * Closes the container
-     */
-    function done() {
-        $this->endElement(); // context-objects
-    }	
-
-    /**
      * Helper function: create CtxO-compatible timestamp from posix timestamp
      * @param $timestamp_unix posix/unix timestamp
      * @return string timestamp as needed for context objects
@@ -184,21 +141,16 @@ class CtxBuilder extends MyXmlWriter {
 		return gmdate('Y-m-d\TH:i:s\Z',$timestamp_unix);
     }
     
-    /**
-     * 
-     * @return int CTXOcounter in this container
-     */
-    function count_ctxo(){
-        return $this->output_count;
-    }
     
-    function outputMemory($flush = true,$force=false) {
+    function outputMemory($flush = false,$force=false) {
         $out = parent::outputMemory($flush);
         
-        if(($this->count_ctxo() > 0) || $force)
+        if($this->first_time || $force)
         {
             return $out;
         }
+        
+        return '';
     }
     
 } 
