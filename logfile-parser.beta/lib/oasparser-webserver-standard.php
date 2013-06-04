@@ -24,12 +24,14 @@ class OASParserWebserverStandard extends OASParser {
         
         var $logstats;
         
+        var $starttime;
+        
     /**
      * Parse the logfile
      */
         function parse() {
                 $this->logstats = new LogStats();
-            
+                $this->starttime = microtime(true);
             
                 $this->dbh = new PDO(
                                 $this->config['database'],
@@ -70,8 +72,11 @@ class OASParserWebserverStandard extends OASParser {
                 
                 //Flush buffers
                 $this->write_data(-1, NULL, true);
-                $this->_log($this->logstats->getCompleteStats());  
                 
+                
+                
+                $this->_log($this->logstats->getCompleteStats());  
+                $this->_log("Duration: " . (microtime(true)-$this->starttime) . " seconds");
                 fclose($fin);
                 $this->dbh->commit();
     }
@@ -222,8 +227,8 @@ class OASParserWebserverStandard extends OASParser {
             
             //Log happenings
             $this->_log("<L:$line> OK: ".$ctxcontainer->countCtxos()." context objects written to DB");
-            $this->logstats->addStat('Database Accesses', '');
-            $this->logstats->addStat('Contextobjects'   , '' ,$ctxcontainer->countCtxos());
+            $this->logstats->addStat('Database entries', '');
+            //$this->logstats->addStat('Contextobjects'   , '' ,$ctxcontainer->countCtxos());
 
             } catch (PDOException $e) {
                 $this->_log("<L:$line> ERROR: cannot interface with database:".$e->getMessage());
@@ -246,6 +251,8 @@ class OASParserWebserverStandard extends OASParser {
                 
                 
                 foreach($values as $ldata) {
+                    $robotstxt = false;
+                    
                     //Get details 
                     $ldata['details']=$this->get_document_details($ldata['document_url']);
 
@@ -257,12 +264,21 @@ class OASParserWebserverStandard extends OASParser {
                             foreach($ldata['details']['types'] as $type){
                                 if($type == "any"){
                                     //$this->_log("<L:{$ldata['line']}> Skipped 'any'-document: " . parse_url($ldata['document_url'],PHP_URL_PATH));
-                                    $threadctxostack['logstats']->addStat('Loglines Skipped', 'ANY document');
+                                    $threadctxostack['logstats']->addStat('Loglines skipped', 'ANY document');
                                     continue 2; //Skip this foreach, and the other foreach
                                 }
                             }
+                        }else{
+                            $robotstxt = true;
                         }
                         
+                    }
+                    
+                    //Count robots.txt hit 
+                    if($robotstxt){
+                        $threadctxostack['logstats']->addStat('Contextobjects', 'robots.txt');
+                    }else{
+                        $threadctxostack['logstats']->addStat('Contextobjects', $ldata['details']['types'][0]);
                     }
                     
                     /* IP <-> Hostname */
@@ -373,7 +389,7 @@ class OASParserWebserverStandard extends OASParser {
          */
     function parse_line($line, $lnr) {
                 $val=array('line'=>$lnr);
-                $this->logstats->addStat('Loglines parsed', '');
+                $this->logstats->addStat('All loglines (cumulated)', '');
                 
 
                 /*               host/ip     user    realm       date       query     status    size     referer   useragent  
@@ -385,14 +401,14 @@ class OASParserWebserverStandard extends OASParser {
                 //              host/ip     user    realm       date             query         status   size         referer       useragent 
                 if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"(..*?)(?<!\\\\)" +([^ ]+) +([^ ]+) +"(.*?)(?<!\\\\)" +"([^"]*)"$/' , trim($line), $match)) {
                         $this->_log("<L:$lnr> Ignore malformed log entry: $line");
-                        $this->logstats->addStat('Loglines Skipped', 'Malformed line');
+                        $this->logstats->addStat('Loglines skipped', 'Malformed line');
                         return false;
                 }
                 
                 /* Statuscode */
                 if(!$this->statuscode_filter($val['status']=$match[6])) {
                         //$this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}");
-                        $this->logstats->addStat('Loglines Skipped', 'Invalid HTTP status ('.$val['status'].')');
+                        $this->logstats->addStat('Loglines skipped', 'Invalid HTTP status ('.$val['status'].')');
                         return false;
                 }
                 
@@ -401,7 +417,7 @@ class OASParserWebserverStandard extends OASParser {
                 $val['method']=$http_data[0]; /* Query method */
                 if(!$this->method_filter($val['method'])) {
                         //$this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.");
-                        $this->logstats->addStat('Loglines Skipped', 'Invalid HTTP method ('.$val['method'].')');
+                        $this->logstats->addStat('Loglines skipped', 'Invalid HTTP method ('.$val['method'].')');
                         return false;
                 }
                 $val['document_url']=$http_data[1]; /* abgerufenes Dokument */
@@ -414,7 +430,7 @@ class OASParserWebserverStandard extends OASParser {
                 foreach ($this->config['extensionfilter'] as $forbiddenextention) {
                     if($fileextension==$forbiddenextention){
                         //$this->_log("<L:$lnr> Ignore since .".$forbiddenextention."-files are not relevant for serviceprovider.");
-                        $this->logstats->addStat('Loglines Skipped', 'Invalid extension ('.$forbiddenextention.')');
+                        $this->logstats->addStat('Loglines skipped', 'Invalid extension ('.$forbiddenextention.')');
                         return false;
                     }
                 }

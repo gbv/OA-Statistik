@@ -5,10 +5,10 @@
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 1.3.3b
+ * @version 1.3.4b
  */
 
-$version='1.3.3b';
+$version='1.3.4b';
 
 // Check if required PHP extensions are available
 if(!function_exists('preg_match'))

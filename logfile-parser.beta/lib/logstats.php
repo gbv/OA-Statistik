@@ -47,10 +47,14 @@
      function getCompleteStats(){
          $message = "\n ------------ STATS ------------ \n";
          
+          ksort ($this->stats);
+         
          foreach($this->stats as $messagetype => $topics)
          {
-             $message.= $messagetype ."(".$this->combineByMessagetype($messagetype).")". "\n";
+             $message.= $messagetype ." (".$this->combineByMessagetype($messagetype).")". "\n";
+                
              
+                ksort ($topics);
                 foreach($topics as $topic => $value){
                     if($topic !=='')
                         $message.="\t-> ".$topic."\t : \t".$value."\n";
