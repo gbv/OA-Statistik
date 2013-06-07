@@ -17,8 +17,8 @@ require_once(dirname(__FILE__).'/config.php');
 $config=array(
 
 	'database'	=> "mysql:host=localhost;dbname=oas_data_provider_webdoc",
-	'username'	=> 'oas',
-	'password'	=> 'oas',
+	'username'	=> 'dbuser',
+	'password'	=> 'dbpassword',
 	'parser'	=> 'OASParserWebserverWebdoc',
 	'per_ent'	=> 10,
 	'maxchilds'	=> 25,

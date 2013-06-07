@@ -18,8 +18,8 @@ $config=array(
         // example with tablename 'contextobjects' and harvesthistory-postfix 'harvesthistory' (standardvalues): 
         // "contextobjects_harvesthistory"
         'harvesthistory'       => 'harvesthistory',
-        'db_user'              => 'oas_demo',
-        'db_password'          => 'oas_demo',
+        'db_user'              => 'dbuser',
+        'db_password'          => 'dbpassword',
         'oai_base_url'         => 'http://oa-statistik.sub.uni-goettingen.de/demo-data-provider/',
         'oai_server_admin'     => 'mimkes@sub.uni-goettingen.de',
         'oai_identifier_prefix'=> 'oai:oa-statistik.sub.uni-goettingen.de:demo',

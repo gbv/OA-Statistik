@@ -29,9 +29,9 @@ $config=array(
 	// PDO database connection string
 	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider_demo',
 	// db user
-	'username'      => 'oas_demo',
+	'username'      => 'dbuser',
 	// db password
-	'password'      => 'oas_demo',
+	'password'      => 'dbpassword',
 	// name of the table within the database
 	'tablename'	=> 'contextobjects',
         // postfix of 'tablename'. name of the table with the harvesthistory.

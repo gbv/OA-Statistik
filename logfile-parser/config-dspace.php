@@ -16,8 +16,8 @@ $config=array(
         
         // PDO database connection string and login-parameters
 	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider_demo',
-	'username'      => 'oas_demo',
-	'password'      => 'oas_demo',
+	'username'      => 'dbuser',
+	'password'      => 'dbpassword',
         
         //Specific config.php overrides
         'per_ent'	=> 30,
