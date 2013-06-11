@@ -39,16 +39,13 @@ class DSpaceToolbox {
 		$id_list=array();
 		$types=array();
 		$search=false;
-		//\/goescholar\/bitstream\/handle\/([a-zA-Z0-9]+)\/([0-9]+)\/([0-9a-zA-Z_]+).([a-zA-Z0-9]+)\?([a-zA-Z0-9]+)
 		
                 if(preg_match('@\/bitstream\/handle\/[^\/]+\/([0-9]+)/@', $path, $match)) {
-                //if(preg_match('/\/bitstream\/[^\/]+\/([0-9]+)\//', $path, $match)) {
 			// Houston, we have a fulltext -- probably.
 			$types[]='fulltext';
 			$search="oai:goedoc.uni-goettingen.de:goescholar/$match[1]";
                         
                 } elseif(preg_match('@\/goescholar\/handle\/[^\/]+\/([0-9]+)@', $path, $match)) {
-		//} elseif(preg_match('/\/handle\/[^\/]+\/([0-9]+)/', $path, $match)) {
 			// This is probably a metadata page
 			$types[]='abstract';
 			$search="oai:goedoc.uni-goettingen.de:goescholar/$match[1]";

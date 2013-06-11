@@ -73,8 +73,6 @@ class OASParserWebserverStandard extends OASParser {
                 //Flush buffers
                 $this->write_data(-1, NULL, true);
                 
-                
-                
                 $this->_log($this->logstats->getCompleteStats());  
                 $this->_log("Duration: " . (microtime(true)-$this->starttime) . " seconds");
                 fclose($fin);
@@ -417,7 +415,10 @@ class OASParserWebserverStandard extends OASParser {
                 }
                 
                 /* HTTP-Infos zum abgerufenen Dokument */
-                $http_data=split(' ',$match[5]);
+                //$http_data=split(' ',$match[5]);
+                
+                $http_data=explode(' ', $match[5]);
+                
                 $val['method']=$http_data[0]; /* Query method */
                 if(!$this->method_filter($val['method'])) {
                         $this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.",$this->config['verbose']);
