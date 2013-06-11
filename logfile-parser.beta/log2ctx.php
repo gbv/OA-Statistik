@@ -5,10 +5,10 @@
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 1.3.4b
+ * @version 1.3.5b
  */
 
-$version='1.3.4b';
+$version='1.3.5b';
 
 // Check if required PHP extensions are available
 if(!function_exists('preg_match'))
@@ -19,18 +19,27 @@ if(!function_exists('gethostbyname') || !function_exists('gethostbyaddr'))
 require_once(dirname(__FILE__).'/lib/oasparser-webserver-standard.php');
 
 // Parse command line options
-$options=getopt('c:I:i:R:OAhS');
+$options=getopt('c:I:i:R:OAhSv');
+
+
+$addargs = "";
+if(isset($options['v']))
+    $addargs = " -v";
 
 if(@$options['c']) {
 	// config file specified as script parameter:
 	require_once($options['c']);
-	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg($options['c']);
+	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg($options['c']).$addargs;
 } else {
 	// fallback: config.php
 	if(!(include dirname(__FILE__).'/config.php'))
 	    $options['h'] = true; // show help
-	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg(dirname(__FILE__).'/config.php');
+	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg(dirname(__FILE__).'/config.php').$addargs;
 }
+
+
+//
+$config['verbose'] = (isset($options['v'])==true);
 
 if(isset($options['h'])) {
 	// help requested
@@ -102,33 +111,7 @@ if(isset($options['O'])) {
         $stmt = $tempdbh->prepare($sqlquery);
         $stmt->execute();
         $tempdbh->commit();
-    
-        /*
-        //Create table for harvesting-timeline
-        $sqlquery = 'CREATE TABLE '.$config['tablename'].'_'.$config['harvesthistory'].'('.
-                                                        'harvesttime timestamp DEFAULT NULL,'. 
-                                                        'recordtimestamp timestamp DEFAULT NULL,'.
-                                                        'line INT(11) DEFAULT NULL,'.
-                                                        'harvesterid VARCHAR(35) DEFAULT NULL,'.
-                                                        'KEY harvesttime (timestamp), KEY recordtimestamp (timestamp)) '.
-                                                        
-                                                        'ENGINE=MyISAM DEFAULT CHARSET=latin1';
-        
-                //Give some infos
-        logger ('---------------------------------------');
-        logger ('Trying to create table in database "'.$config['database'].'_'.$config['harvesthistory'] .'"....');
-        logger (' ');
-        logger ('Query:');
-        logger ($sqlquery.';');
-        logger ('---------------------------------------');
-        
-        $tempdbh->beginTransaction();
 
-        $stmt = $tempdbh->prepare($sqlquery);
-        $stmt->execute();
-        $tempdbh->commit();
-        */
-        
     } catch (Exception $e) {
                     logger("<Database ERROR> Cannot interface with database: ".$e->getMessage());
     }

@@ -28,7 +28,13 @@ class OASParser {
      * @param $what text to log
      * @param $level optional: log level
      */
-    function _log($what, $level=10) {
+    function _log($what,  $showit = true) {
+        
+            $level = 10;
+        
+            if(!$showit)
+                return;
+            
 	    if($this->logger) call_user_func($this->logger, $what, $level);
     }
     
@@ -39,9 +45,11 @@ class OASParser {
 	 * @return bool true if IP is valid
      */
     function is_ip($name) {
-	    if(preg_match('/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/',$name))
+	    /*if(preg_match('/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/',$name))
 		    return true;
-	    return false;
+	    return false;*/
+        
+        return (@inet_pton($name) !==false );
     }
 
     /**

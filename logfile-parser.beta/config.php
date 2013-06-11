@@ -27,17 +27,13 @@ $config=array(
 	// context objects in a contextobjects container
 	'per_ent'	=> 50,
 	// PDO database connection string
-	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider_demo',
+	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider',
 	// db user
-	'username'      => 'dbuser',
+	'username'      => 'db_user',
 	// db password
-	'password'      => 'dbpassword',
+	'password'      => 'db_password',
 	// name of the table within the database
 	'tablename'	=> 'contextobjects',
-        // postfix of 'tablename'. name of the table with the harvesthistory.
-        // example with tablename 'contextobjects' and harvesthistory-postfix 'harvesthistory' (standardvalues): 
-        // "contextobjects_harvesthistory"
-        'harvesthistory'=> 'harvesthistory', 
 	// where to read data from
 	'file_in'	=> 'php://stdin',
 	// prefix this to the path read from config file to form a full URL
@@ -48,7 +44,10 @@ $config=array(
 	'maxchilds'	=> 10,
 	// identifier prefix (".<line>" is added)
 	'identifier'    => 'oai:demo',
-	// the service_id for annotating the context object
+        // identifier postfix
+        'identifier_postfix'    => base_convert(microtime(),10,36),
+
+        // the service_id for annotating the context object
 	'service_id'	=> 'http://www.oas_demo.de/oastatistik',
     
         //This is specific for broken OAI PMH Implementations.

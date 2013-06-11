@@ -163,11 +163,11 @@ class OASParserWebserverStandard extends OASParser {
         if($flush){
             
             //Write everything left to database
-            $this->_log("<L:{$line}>"."FLUSH BUFFERS TO DB...");
+            $this->_log("<L:{$line}>"."FLUSH BUFFERS TO DB...",$this->config['verbose']);
             
             //Is something in here?
             if(count($this->ctxo_stack)==0){
-                $this->_log("<L:{$line}>"."Stack is empty, nothing to flush.");
+                $this->_log("<L:{$line}>"."Stack is empty, nothing to flush.",$this->config['verbose']);
                 
                 return;
             }
@@ -188,8 +188,8 @@ class OASParserWebserverStandard extends OASParser {
                 //Combine new ctxos with current stack
                 $workingstack = array_merge($this->ctxo_stack,$ctxo);
                 
-                //$this->_log("<L:{$line}> Writingattempt: ". count($this->ctxo_stack). " oldstacksize, going to add ".count($threadctxostack).'.');
-                //$this->_log("<L:{$line}> Additionstack now is " . count($workingstack));
+                //$this->_log("<L:{$line}> Writingattempt: ". count($this->ctxo_stack). " oldstacksize, going to add ".count($threadctxostack).'.',$this->config['verbose']);
+                //$this->_log("<L:{$line}> Additionstack now is " . count($workingstack),$this->config['verbose']);
                 
                 //Reset main stack
                 unset($this->ctxo_stack);
@@ -218,9 +218,12 @@ class OASParserWebserverStandard extends OASParser {
         }
 
         try {
+            
+            $identifier = $this->config['identifier'].':'.$this->config['identifier_postfix'];
+            
             $stmt = $this->dbh->prepare('INSERT INTO '.$this->config['tablename'].' (timestamp, identifier, line, data) VALUES (?, ?, ?, ?)');
             $stmt->bindParam(1, time());
-            $stmt->bindParam(2, $this->config['identifier']);
+            $stmt->bindParam(2, $identifier);
             $stmt->bindParam(3, $line);
             $stmt->bindParam(4,$ctxcontainer->getXML());
             $stmt->execute();
@@ -263,7 +266,7 @@ class OASParserWebserverStandard extends OASParser {
                         if(!(pathinfo(parse_url($ldata['document_url'],PHP_URL_PATH),PATHINFO_BASENAME) == "robots.txt")) {
                             foreach($ldata['details']['types'] as $type){
                                 if($type == "any"){
-                                    //$this->_log("<L:{$ldata['line']}> Skipped 'any'-document: " . parse_url($ldata['document_url'],PHP_URL_PATH));
+                                    $this->_log("<L:{$ldata['line']}> Skipped 'any'-document: " . parse_url($ldata['document_url'],PHP_URL_PATH),$this->config['verbose']);
                                     $threadctxostack['logstats']->addStat('Loglines skipped', 'ANY document');
                                     continue 2; //Skip this foreach, and the other foreach
                                 }
@@ -289,7 +292,7 @@ class OASParserWebserverStandard extends OASParser {
                     }
                     
                     if(!OASParser::is_ip($ldata['ip'])) {
-                            $this->_log("<L:{$ldata['line']}> Log Entry: cannot resolve hostname '{$ldata['ip']}'; handling hostname as IP.");
+                            $this->_log("<L:{$ldata['line']}> Log Entry: cannot resolve hostname '{$ldata['ip']}'; handling hostname as IP.",$this->config['verbose']);
                             
                             //Hostadress Fallback Method 1
                             $ldata['ip'] = $ldata['hostname'];
@@ -398,16 +401,17 @@ class OASParserWebserverStandard extends OASParser {
                         return false;
                 }*/
                 
+                //             '/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"(..*?)(?<!\\\\)" +([^ ]+) +([^ ]+) +"(.*?)(?<!\\\\)" +"(.*?)(?<!\\\\)"$/'
                 //              host/ip     user    realm       date             query         status   size         referer       useragent 
-                if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"(..*?)(?<!\\\\)" +([^ ]+) +([^ ]+) +"(.*?)(?<!\\\\)" +"([^"]*)"$/' , trim($line), $match)) {
-                        $this->_log("<L:$lnr> Ignore malformed log entry: $line");
+                if(!preg_match('/^([^ ]+) +([^ ]+) +([^ ]+) +\[([^\]]+)\] +"(..*?)(?<!\\\\)" +([^ ]+) +([^ ]+) +"(.*?)(?<!\\\\)" +"(.*?)(?<!\\\\)"$/' , trim($line), $match)) {
+                        $this->_log("<L:$lnr> Ignore malformed log entry: $line",$this->config['verbose']);
                         $this->logstats->addStat('Loglines skipped', 'Malformed line');
                         return false;
                 }
                 
                 /* Statuscode */
                 if(!$this->statuscode_filter($val['status']=$match[6])) {
-                        //$this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}");
+                        $this->_log("<L:$lnr> Ignore since HTTP status code is {$val['status']}",$this->config['verbose']);
                         $this->logstats->addStat('Loglines skipped', 'Invalid HTTP status ('.$val['status'].')');
                         return false;
                 }
@@ -416,7 +420,7 @@ class OASParserWebserverStandard extends OASParser {
                 $http_data=split(' ',$match[5]);
                 $val['method']=$http_data[0]; /* Query method */
                 if(!$this->method_filter($val['method'])) {
-                        //$this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.");
+                        $this->_log("<L:$lnr> Ignore since HTTP method {$val['method']} is not known/supported.",$this->config['verbose']);
                         $this->logstats->addStat('Loglines skipped', 'Invalid HTTP method ('.$val['method'].')');
                         return false;
                 }
@@ -429,7 +433,7 @@ class OASParserWebserverStandard extends OASParser {
                  *  sollen gefiltert werden */ 
                 foreach ($this->config['extensionfilter'] as $forbiddenextention) {
                     if($fileextension==$forbiddenextention){
-                        //$this->_log("<L:$lnr> Ignore since .".$forbiddenextention."-files are not relevant for serviceprovider.");
+                        $this->_log("<L:$lnr> Ignore since .".$forbiddenextention."-files are not relevant for serviceprovider.",$this->config['verbose']);
                         $this->logstats->addStat('Loglines skipped', 'Invalid extension ('.$forbiddenextention.')');
                         return false;
                     }
