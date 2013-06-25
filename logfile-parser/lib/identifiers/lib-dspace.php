@@ -40,11 +40,12 @@ class DSpaceToolbox {
 		$types=array();
 		$search=false;
 		
-		if(preg_match('/\/bitstream\/[^\/]+\/([0-9]+)\//', $path, $match)) {
+                if(preg_match('@\/bitstream\/handle\/[^\/]+\/([0-9]+)/@', $path, $match)) {
 			// Houston, we have a fulltext -- probably.
 			$types[]='fulltext';
 			$search="oai:goedoc.uni-goettingen.de:goescholar/$match[1]";
-		} elseif(preg_match('/\/handle\/[^\/]+\/([0-9]+)/', $path, $match)) {
+                        
+                } elseif(preg_match('@\/goescholar\/handle\/[^\/]+\/([0-9]+)@', $path, $match)) {
 			// This is probably a metadata page
 			$types[]='abstract';
 			$search="oai:goedoc.uni-goettingen.de:goescholar/$match[1]";

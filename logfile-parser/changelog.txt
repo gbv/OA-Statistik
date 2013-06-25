@@ -1,3 +1,48 @@
+--------- V 1.3.6b ----------------------
+- getSalt.sh deleted
+  generate a salt by using get_randomsalt.sh. You
+  don't need a login, because it's random and more secure.
+
+--------- V 1.3.5b ----------------------
+- Fixed bug where ip was sometimes used as hostname
+- verbosemode added
+- oai-header optimised, is now unique
+- removed a stump for harvest history
+--------- V 1.3.4b ----------------------
+!! CAREFUL !!
+!This version is barely tested yet!
+
+
+-	Logfile Parser
+
+	o	updated statistics behaviour
+
+--------- V 1.3.3b ----------------------
+!! CAREFUL !!
+!This version is barely tested yet!
+
+
+-	Logfile Parser
+
+	o	Creates a tiny statistic about the parsed logfile
+	o	less log-outputs (there will be a verbose mode in the future to get them back)
+	o	improved sqlite behaviour (now uses a stack cache)
+	o	improved creation of context-object- container
+
+
+	o	all in all should give the parser a nice performance boost.
+
+--------- V 1.3b ----------------------
+-	Logfile Parser
+	o	Fallback for not resolvable Hostnames: Hostnames will be treated as IP
+	o	Logfiletimezones will be handled as UTC
+	o	Fixed harvest-identifiers, should work again
+		
+
+-	Data Provider
+	o	Some core elements rewritten; avoids the DOM XML extension
+	o	Custom OAI error added, when XML loaded fromo database isn't wellformed
+
 --------- V 1.2 ----------------------
 -	Logfile Parser
 	o	Bugfixes for any-flag

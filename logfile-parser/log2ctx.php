@@ -5,10 +5,10 @@
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage logfile-parser
- * @version 1.2
+ * @version 1.3.6b
  */
 
-$version='1.2';
+$version='1.3.6b';
 
 // Check if required PHP extensions are available
 if(!function_exists('preg_match'))
@@ -19,18 +19,27 @@ if(!function_exists('gethostbyname') || !function_exists('gethostbyaddr'))
 require_once(dirname(__FILE__).'/lib/oasparser-webserver-standard.php');
 
 // Parse command line options
-$options=getopt('c:I:i:R:OAhS');
+$options=getopt('c:I:i:R:OAhSv');
+
+
+$addargs = "";
+if(isset($options['v']))
+    $addargs = " -v";
 
 if(@$options['c']) {
 	// config file specified as script parameter:
 	require_once($options['c']);
-	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg($options['c']);
+	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg($options['c']).$addargs;
 } else {
 	// fallback: config.php
 	if(!(include dirname(__FILE__).'/config.php'))
 	    $options['h'] = true; // show help
-	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg(dirname(__FILE__).'/config.php');
+	$config['callback']='php -f '.escapeshellarg(__FILE__).' -- -A -c '.escapeshellarg(dirname(__FILE__).'/config.php').$addargs;
 }
+
+
+//
+$config['verbose'] = (isset($options['v'])==true);
 
 if(isset($options['h'])) {
 	// help requested
@@ -73,7 +82,7 @@ if(isset($options['O'])) {
     // special case: initialize database
     try {
         
-        
+        //Create table for contextobjects
         $sqlquery = 'CREATE TABLE '.$config['tablename'].' ( timestamp INT(11) DEFAULT NULL,'. 
                                                         'identifier VARCHAR(255) DEFAULT NULL,'.
                                                         'line INT(11) DEFAULT NULL,'.
@@ -99,17 +108,25 @@ if(isset($options['O'])) {
 
         $tempdbh->beginTransaction();
 
-        //$stmt = $dbh->prepare('CREATE TABLE '.$config['tablename'].' (timestamp INT, identifier VARCHAR(255), line INT, data BLOB)');
         $stmt = $tempdbh->prepare($sqlquery);
         $stmt->execute();
         $tempdbh->commit();
-    
+
     } catch (Exception $e) {
                     logger("<Database ERROR> Cannot interface with database: ".$e->getMessage());
     }
     
     
+    try{
+        mkdir('./data/');
+    }catch(Exception $e) {
+                    logger('Unable to create directory "./data/" with "chmod 0700". This is needed for the sqlite cache ');
+                    logger('"'.$config['db_identifier'].'!"');
+    }
+    
+    
     logger( "\nOK.\n");
+    
 } elseif(@$options['R']) {
     // special case: remove old data sets
     if($options['R']==='all') {

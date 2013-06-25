@@ -1,4 +1,4 @@
-﻿Open Access Statistics Data Provider v0.1
+Open Access Statistics Data Provider v0.1
 
 Includes SHA256 static class for PHP4
 Feyd <feyd@devnetwork.dot.net>
@@ -12,7 +12,7 @@ Released under the General Public License (GPL) version 2 as part of EPrints 2
 
 Licensed under the MIT license:
 
-Copyright (c) 2013, Göttingen State and University Library
+Copyright (c) 2010, Göttingen State and University Library
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

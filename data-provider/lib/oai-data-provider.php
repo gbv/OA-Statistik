@@ -3,13 +3,28 @@
  * OAI 2.0 Data Provider
  * 
  * Base class only, extend for custom tasks
- * Requires DOM extension
+ * Requires myxmlwriter
  *
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider
  * @subpackage oai-data-provider
- * @version 0.1
+ * @version 0.3
  */
+
+
+//Useful Constants
+define('CTXO_NAMESPACE','info:ofi/fmt:xml:xsd:ctx');
+define('CTXO_SCHEMA','http://www.openurl.info/registry/docs/xsd/info:ofi/fmt:xml:xsd:ctx');
+define('CTXO_METADATAPREFIX','oas');
+
+define('XML_SCHEMA_INSTANCE','http://www.w3.org/2001/XMLSchema-instance');
+
+define ('OAI20','http://www.openarchives.org/OAI/2.0/');
+define ('OAI20_XSD','http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+
+define('OAIDC_ELEMENTS','http://purl.org/dc/elements/1.1/');
+define('OAIDC','http://www.openarchives.org/OAI/2.0/oai_dc/');
+define('OAIDC_XSD','http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
 
 class OAI20DataProvider {
 	
@@ -46,28 +61,16 @@ class OAI20DataProvider {
 	/**
 	 * Create XML answer to 'Identifiy' request
 	 */
-	function OAI20Identify() {
-		$this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'repositoryName', $this->identify['repositoryName']));
-		$this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'baseURL', $this->identify['baseURL']));
-		$this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'protocolVersion', $this->identify['protocolVersion']));
-                
-                $this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'adminEmail', $this->identify['adminEmail']));
-                
-                $this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'earliestDatestamp', $this->identify['earliestDatestamp']));
-		$this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'deletedRecord', $this->identify['deletedRecord']));
-		$this->_verbnode->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'granularity', $this->identify['granularity']));
-		/*foreach($this->identify['adminEmail'] as $adminEmail)
-			$this->_verbnode->appendChild($this->_response->createElementNS(
-				'http://www.openarchives.org/OAI/2.0/', 'adminEmail', $adminEmail)); */
+	function OAI20Identify() {            
+                $this->_verbnode->writeElementNS(NULL,'repositoryName'     ,OAI20,$this->identify['repositoryName']);
+                $this->_verbnode->writeElementNS(NULL,'baseURL'            ,OAI20,$this->identify['baseURL']);
+                $this->_verbnode->writeElementNS(NULL,'protocolVersion'    ,OAI20,$this->identify['protocolVersion']);
+                $this->_verbnode->writeElementNS(NULL,'adminEmail'         ,OAI20,$this->identify['adminEmail']);        
+                $this->_verbnode->writeElementNS(NULL,'earliestDatestamp'  ,OAI20,$this->identify['earliestDatestamp']);  
+                $this->_verbnode->writeElementNS(NULL,'deletedRecord'      ,OAI20,$this->identify['deletedRecord']);
+                $this->_verbnode->writeElementNS(NULL,'granularity'        ,OAI20,$this->identify['granularity']);
 	}
-
+        
 	/**
 	 * Handle 'GetRecord' request
 	 * MUST BE OVERLOADED IN CHILD CLASSES
@@ -80,11 +83,12 @@ class OAI20DataProvider {
 	 * Handle 'ListMetadataFormats' request
 	 */
 	function OAI20ListMetadataFormats() {
-		$this->_verbnode->appendChild($format_dc=$this->_response->createElementNS($ns='http://www.openarchives.org/OAI/2.0/', 'metadataFormat'));
-		$format_dc->appendChild($this->_response->createElementNS($ns,'metadataPrefix','oai_dc'));
-		$format_dc->appendChild($this->_response->createElementNS($ns,'schema','http://www.openarchives.org/OAI/2.0/oai_dc.xsd'));
-		$format_dc->appendChild($this->_response->createElementNS($ns,'metadataNamespace','http://www.openarchives.org/OAI/2.0/oai_dc/'));
-		// overload to offer more metadataFormats
+            $this->_verbnode->startElementNS(NULL,'metadataFormat'         ,OAI20);
+                $this->_verbnode->writeElementNS(NULL,'metadataPrefix'     ,OAI20,'oai_dc');
+                $this->_verbnode->writeElementNS(NULL,'schema'             ,OAI20,'http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
+                $this->_verbnode->writeElementNS(NULL,'metadataNamespace'  ,OAI20,'http://www.openarchives.org/OAI/2.0/oai_dc');
+            $this->_verbnode->endElement(); // metadataFormat
+            // overload to offer more metadataFormats
 	}
 
 	/**
@@ -122,10 +126,17 @@ class OAI20DataProvider {
 		if(is_array($params)) foreach($params as $key=>$value)
 			if(!in_array($key,array('verb','pos','resumptionToken')))
 				$token.=','.$key.':'.$value;
-		$this->_verbnode->appendChild($rtnode=$this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'resumptionToken',$resume_at?$token:''));
-		if(is_array($additional_info)) foreach($additional_info as $key=>$value)
-			$rtnode->setAttribute($key,$value);
+                        
+                $this->_verbnode->startElementNS(NULL,'resumptionToken',NULL);
+                if(is_array($additional_info)){
+                    foreach($additional_info as $key=>$value)
+			$this->_verbnode->writeAttribute($key,$value);
+                }
+                
+                if($resume_at)
+                   $this->_verbnode->addContent($token);
+                
+                $this->_verbnode->endElement(); // resumptionToken
 	}
 
 	/**
@@ -201,30 +212,44 @@ class OAI20DataProvider {
 	 * @return DOMDocument
 	 */
 	function handle_request($stylesheet=false) {
-		$this->_response=new DOMDocument('1.0');
-		if($stylesheet) {
-		    $xslt=$this->_response->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"');
-		    $this->_response->appendChild($xslt);
-		}
-		$this->_response->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'OAI-PMH'));
-		$this->_response->documentElement->setAttributeNS(
-			'http://www.w3.org/2001/XMLSchema-instance',
-			'xsi:schemaLocation',
-			'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+                 //Getting Params
+                 $this->_params+=array()+$_GET+$_POST;
+            
+                 //init myXMFLWriter
+                $this->_response=new MyXmlWriter();
+                $this->_response->openMemory();
+                $this->_response->startDocument();
+                
+               if($stylesheet) {
+                    $this->_response->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="'.$stylesheet.'"');
+                }
+                
+                //Open OAI-PMH Protocol
+                $this->_response->startElementNS(NULL,'OAI-PMH',OAI20);
+                $this->_response->writeAttributeNS('xsi','schemaLocation',XML_SCHEMA_INSTANCE,OAI20 . ' ' .OAI20_XSD); //CHECK THIS!
+                
+                    $this->_response->writeElementNS(NULL,'responseDate',OAI20,gmdate('Y-m-d\TH:i:s\Z'));
 
-		$this->_response->documentElement->appendChild($this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'responseDate', gmdate('Y-m-d\TH:i:s\Z')));
-		$this->_response->documentElement->appendChild($requestnode=$this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'request', $this->identify['baseURL']));
+                    $this->_response->startElementNS(NULL,'request',OAI20);
+                        if(isset($this->_params['verb']))
+                            $this->_response->writeAttribute('verb',$this->_params['verb']);
+                        
+                        if(isset($this->_params['metadataPrefix']))
+                            $this->_response->writeAttribute('metadataPrefix',$this->_params['metadataPrefix']);
+                        
+                        $this->_response->addContent($this->identify['baseURL']);
+                    $this->_response->endElement();//request
 
-		$this->_params+=array()+$_GET+$_POST;
 
 		if(!isset($this->_params['verb'])) {
 			$this->_OAI20ErrorBadVerb();
 		} else {
-			$this->_verbnode=$this->_response->createElementNS(
-				'http://www.openarchives.org/OAI/2.0/', $verb=$this->_params['verb']);
+			$verb=$this->_params['verb'];
+                        
+                        //init myXMLWriter for "verbnode", e.g. contextobjects-content or identify
+                        $this->_verbnode=new MyXmlWriter();
+                        $this->_verbnode->openMemory(); //just open memory, because we want do append this to the responsenode later
+                        
 			if($verb=='GetRecord') {
 				if(!$this->_check_params_required(array('identifier','metadataPrefix'))||
 					!$this->_check_params_allowed(array('identifier','metadataPrefix'))) {
@@ -252,7 +277,7 @@ class OAI20DataProvider {
 			} elseif($verb=='ListRecords'||$verb=='ListIdentifiers') {
 				if(!(($this->_check_params_allowed(array('resumptionToken')) &&
 					$this->_check_params_required(array('resumptionToken')))) &&
-				   !(($this->_check_params_allowed(array('from','until','set','metadataPrefix')) &&
+				   !(($this->_check_params_allowed(array('from','until','set','metadataPrefix','harvesterIdentifier')) &&
 					$this->_check_params_required(array('metadataPrefix')))) ) {
 					$this->_OAI20ErrorBadArgument();
 				} else {
@@ -270,11 +295,13 @@ class OAI20DataProvider {
 		unset($this->_params['pos']);
 		unset($this->_params['rqt']);
 
-		if($this->_print_parameters) foreach($this->_params as $key=>$value)
-			$requestnode->setAttribute($key,$value);
-		if($this->_had_no_error)
-			$this->_response->documentElement->appendChild($this->_verbnode);
-
+		
+                if($this->_had_no_error){
+                        $this->_response->writeElementNS(NULL, $verb,OAI20 , $this->_verbnode->outputMemory(), false);
+                        $this->_response->endElement(); //metadata
+                    }
+                
+                $this->_response->endElement(); //oai pmh
 		return $this->_response;
 	}
 	
@@ -320,9 +347,11 @@ class OAI20DataProvider {
 	}
 	function _OAI20Error($errorcode,$message) {
 		$this->_had_no_error=false;
-		$this->_response->documentElement->appendChild($errornode=$this->_response->createElementNS(
-			'http://www.openarchives.org/OAI/2.0/', 'error', $message));
-		$errornode->setAttribute('code',$errorcode);
+
+                $this->_response->startElementNS(NULL,'error',OAI20);
+                    $this->_response->writeAttribute('code',$errorcode);
+                    $this->_response->addContent($message);
+                $this->_response->endElement();
 	}
 }
 ?>

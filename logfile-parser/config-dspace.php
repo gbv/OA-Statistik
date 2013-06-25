@@ -13,17 +13,8 @@ require_once(dirname(__FILE__).'/config.php');
 
 $config=array(
 	'parser'	=> 'OASParserWebserverDSpace',
-        
-        // PDO database connection string and login-parameters
-	'database'	=> 'mysql:host=localhost;dbname=oas_data_provider_demo',
-	'username'      => 'dbuser',
-	'password'      => 'dbpassword',
-        
-        //Specific config.php overrides
-        'per_ent'	=> 30,
-	'maxchilds'	=> 25,
-    
-	// specific adresses for the DSpace server integration:
+	
+	// specific for the DSpace server integration:
 	'db_identifier'	=> dirname(__FILE__).'/data/oai-harvester-dspace.db',
 	'service_id'	=> 'http://goedoc.uni-goettingen.de/',
 	'baseurl'	=> 'http://goedoc.uni-goettingen.de',

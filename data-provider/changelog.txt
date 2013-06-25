@@ -1,3 +1,17 @@
+--------- V 1.3.5b ----------------------
+- removed a stump for harvest history
+
+--------- V 1.3b ----------------------
+-	Logfile Parser
+	o	Fallback for not resolvable Hostnames: Hostnames will be treated as IP
+	o	Logfiletimezones will be handled as UTC
+	o	Fixed harvest-identifiers, should work again
+		
+
+-	Data Provider
+	o	Some core elements rewritten; avoids the DOM XML extension
+	o	Custom OAI error added, when XML loaded fromo database isn't wellformed
+
 --------- V 1.2 ----------------------
 -	Logfile Parser
 	o	Bugfixes for any-flag
@@ -7,6 +21,7 @@
 	o	Some annotations added
 	o	Added STUB- files for an easier way to understand how to
 		install the parser
+
 -	Data Provider
 	o	Fixed a bug, where occasionally XML output was wasn't valid
 

@@ -50,10 +50,10 @@ class IdentifierHarvester extends OAIHarvester {
 		$xpath->registerNamespace('OAIDC','http://www.openarchives.org/OAI/2.0/oai_dc/');
 		$xpath->registerNamespace('DC','http://purl.org/dc/elements/1.1/');
 
-		if(!($oai_identifier=$xpath->query('/OAI20:record/OAI20:header/OAI20:identifier')->item(0)->nodeValue))
+		if(!($oai_identifier=$xpath->query('//OAI20:record/OAI20:header/OAI20:identifier')->item(0)->nodeValue))
 			throw new OAIHarvesterException('Missing identifier in record header');
 
-		if(!($oai_datestamp=$xpath->query('/OAI20:record/OAI20:header/OAI20:datestamp')->item(0)->nodeValue))
+		if(!($oai_datestamp=$xpath->query('//OAI20:record/OAI20:header/OAI20:datestamp')->item(0)->nodeValue))
 			throw new OAIHarvesterException('Missing datestamp in record header');
 		
 		date_default_timezone_set('UTC'); // stupid PHP
@@ -64,12 +64,12 @@ class IdentifierHarvester extends OAIHarvester {
 		$del_stm->execute(array($oai_identifier)); // delete existent records for this oaiid
 		
 		// now write new entries for each found identifier:
-		foreach($xpath->query('/OAI20:record/OAI20:metadata/OAIDC:dc/DC:identifier') as $identifier_node) {
+		foreach($xpath->query('//OAI20:record/OAI20:metadata/OAIDC:dc/DC:identifier') as $identifier_node) {
 			$dc_identifier=$orig_id=trim($identifier_node->nodeValue);
 			$this->_log("Found DC:Identifier <$dc_identifier>");
 			if(false!==strpos($dc_identifier,' ')) {
 				// identifier contains spaces, so it possibly is some other kind of metadata
-				$this->_log('ignored identifier, since it does not to be a technical one.');
+				$this->_log("ignored identifier, since it doesn't seem to be a technical one.");
 				continue;
 			} elseif(preg_match('/^[0-9]{4}-[0-9]{3}[0-9X]/',$dc_identifier)) {
 				// identifier is an ISSN (we guess so....)

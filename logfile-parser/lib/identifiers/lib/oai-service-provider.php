@@ -360,9 +360,19 @@ class OAIServiceProvider {
 			$xpath=$this->_oai_xpath($res);     // XPath context, w/ registered namespaces
 			// execute XPath query for result entities
 			$nodes=$xpath->query($xpathquery);
-
-			// pass on to parser callback function
-			call_user_func($callback, $res);
+                        
+                        //VORSCHLAG ÄNDERUNG
+                        foreach($nodes as $node) {
+                                $doc=new DOMDocument();
+                                $nodecopy=$doc->importNode($node,true);
+                                $doc->appendChild($nodecopy);
+                                
+                                // issue callback for each completed entity
+                                call_user_func($callback, $doc);
+                        }
+                        
+			// pass on to parser callback function ALT
+			//call_user_func($callback, $res);
 
 			// check for resumptionToken and query next parts if found
 			if($rt) {

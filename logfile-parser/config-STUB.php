@@ -30,13 +30,28 @@ $config=array(
         'database'	=> "mysql:host=localhost;dbname=oas_data_provider_STUB",
 	'username'	=> 'STUB_username',
 	'password'	=> 'STUB_password',
-    
-	'db_identifier'	=> dirname(__FILE__).'/data/oai-harvester-STUB.db',
+            
+        //identifications/names
 	'service_id'	=> 'http://EXAMPLE.uni-goettingen.de/',
 	'baseurl'	=> 'http://EXAMPLE.uni-goettingen.de',
 	'url_prefix'	=> 'http://EXAMPLE.uni-goettingen.de',
+    
+        //adress of the oai-pmh interface of your repository. The logfile
+        //parser needs it to identify documents via harvest-identifiers.php.
 	'oai_server'	=> 'http://EXAMPLE.uni-goettingen.de/STUB-oai-Server/request',
-	'metadataPrefix'=> 'oai_dc',
+        'metadataPrefix'=> 'oai_dc',
+    
+        //Cache database for oai-pmh. This is just a name for internal handling.
+        //Name it as needed.
+        'db_identifier'	=> dirname(__FILE__).'/data/oai-harvester-STUB.db',
+
+        //-----------------------------------------------------------------
+        //  ***                    CUSTOM FLAGS                        ***
+        //     All flags listet from here are CUSTOM! Handle with care!
+        //     To determine, which flags are possible look 
+        //     at "config.php".
+        //-----------------------------------------------------------------
+        
     
         /*Here is an example of a configuration which can be overridden. For other
         possibilities of configuring the logfile-parser see "config.php".
