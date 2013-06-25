@@ -1,3 +1,8 @@
+--------- V 1.3.6b ----------------------
+- getSalt.sh deleted
+  generate a salt by using get_randomsalt.sh. You
+  don't need a login, because it's random and more secure.
+
 --------- V 1.3.5b ----------------------
 - Fixed bug where ip was sometimes used as hostname
 - verbosemode added
