@@ -24,7 +24,7 @@ define('XMLSCHEMALOC_CTX', 'http://www.openurl.info/registry/docs/xsd/info:ofi/f
 class CtxBuilder extends MyXmlWriter {
     var $first_time=false;
     var $last_time=false;
-    
+    var $output_count;
     /**
      * Creates a ctxo out of given parameters
      * @param $data xml data to add
@@ -37,7 +37,6 @@ class CtxBuilder extends MyXmlWriter {
 		if(!$this->first_time)
 		    $this->first_time=$data['time'];
 		$this->last_time=$data['time'];
-		$this->output_count++;
 		
 		$this->startElementNS(NULL,'context-object',XMLNS_CTX);
 		$this->writeAttribute('timestamp',$this->format_time($data['time']));

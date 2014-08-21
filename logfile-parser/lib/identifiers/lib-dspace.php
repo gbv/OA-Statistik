@@ -40,19 +40,20 @@ class DSpaceToolbox {
 		$types=array();
 		$search=false;
 		
-                if(preg_match('@\/bitstream\/handle\/[^\/]+\/([0-9]+)/@', $path, $match)) {
+                if(preg_match('@\/bitstream\/handle\/([^\/])+\/([0-9]+)/@', $path, $match)) {
 			// Houston, we have a fulltext -- probably.
 			$types[]='fulltext';
-			$search="oai:goedoc.uni-goettingen.de:goescholar/$match[1]";
+			$search="oai:goedoc.uni-goettingen.de:$match[1]/$match[2]";
                         
-                } elseif(preg_match('@\/goescholar\/handle\/[^\/]+\/([0-9]+)@', $path, $match)) {
+                } elseif(preg_match('@\/goescholar\/handle\/([^\/])+\/([0-9]+)@', $path, $match)) {
 			// This is probably a metadata page
 			$types[]='abstract';
-			$search="oai:goedoc.uni-goettingen.de:goescholar/$match[1]";
+			$search="oai:goedoc.uni-goettingen.de:$match[1]/$match[2]";
 			$check=true;
 		} else {
 			$types[]='any';
-		}
+                        
+                }
 		if($search) {
 			$oaiid=false;
 			foreach($this->dbh->query($sql='SELECT oaiid, assigned_identifier FROM data WHERE oaiid LIKE '.$this->dbh->quote($search).';') as $data) {

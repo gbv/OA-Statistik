@@ -87,7 +87,20 @@ class OASParser {
 	 * @return string C-class in form xxx.xxx.xxx.0
 	 */
     function get_c_class_net($ip) {
-		return preg_replace('/^([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+$/','\1.0',$ip);
+        
+            if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
+                return preg_replace('/^([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+$/','\1.0',$ip);
+            }else{
+                //We already checked, if the IP is valid. If it isn't IP4, it has to be IP6.
+                
+                //if(filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)){
+                    //Strange hack to get only the first 4 chunks of the ip
+                    $exploded = explode(":", $ip, 5);
+                    unset($exploded[4]);
+
+                    return(implode(":", $exploded)."::::");
+                //}
+            }
     }
 
     /**

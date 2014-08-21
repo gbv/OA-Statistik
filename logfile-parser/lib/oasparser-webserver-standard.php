@@ -2,7 +2,7 @@
 /**
  * Parser for lines from standard webserver log files
  *
- * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB G�?¶ttingen
+ * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB G�?¶ttingen
  * @package data-provider
  * @subpackage logfile-parser
  * @version 0.4.2 Marc Giesmann, 29.05.2013
@@ -229,7 +229,6 @@ class OASParserWebserverStandard extends OASParser {
             //Log happenings
             $this->_log("<L:$line> OK: ".$ctxcontainer->countCtxos()." context objects written to DB");
             $this->logstats->addStat('Database entries', '');
-            //$this->logstats->addStat('Contextobjects'   , '' ,$ctxcontainer->countCtxos());
 
             } catch (PDOException $e) {
                 $this->_log("<L:$line> ERROR: cannot interface with database:".$e->getMessage());
@@ -427,20 +426,20 @@ class OASParserWebserverStandard extends OASParser {
                 }
                 $val['document_url']=$http_data[1]; /* abgerufenes Dokument */
                 
-                /* Dateiendungs�?¼berpr�?¼fung */
+                /* Dateiendungs�?¼berpr�?¼fung */
                 $fileextension =  strtolower(pathinfo(parse_url($val['document_url'],PHP_URL_PATH),PATHINFO_EXTENSION));
 
-                /*  Dateien, die unwesentlich f�?¼r den Serviceprovicer sind
+                /*  Dateien, die unwesentlich f�?¼r den Serviceprovicer sind
                  *  sollen gefiltert werden */ 
                 foreach ($this->config['extensionfilter'] as $forbiddenextention) {
                     if($fileextension==$forbiddenextention){
                         $this->_log("<L:$lnr> Ignore since .".$forbiddenextention."-files are not relevant for serviceprovider.",$this->config['verbose']);
-                        $this->logstats->addStat('Loglines skipped', 'Invalid extension ('.$forbiddenextention.')');
+                        $this->logstats->addStat('Loglines skipped', 'Extension '.$forbiddenextention.' is on blacklist.');
                         return false;
                     }
                 }
 
-                /* IP <-> Hostname */ // eigentliche Aufl�?¶sung verschoben in asynchrone Bearbeitung
+                /* IP <-> Hostname */ // eigentliche Aufl�?¶sung verschoben in asynchrone Bearbeitung
                 if(!$this->is_ip($match[1])) {
                         $val['hostname'] = $match[1];
                         $val['ip'] = false;
@@ -458,21 +457,21 @@ class OASParserWebserverStandard extends OASParser {
                 /* Dateiformat; MIME */
                 switch($fileextension)
                 {
-                     case 'pdf' :$itemformat = 'application/pdf'        ;   break;
-                     case 'ps'  :$itemformat = 'application/postscript' ;   break;
-                     case 'eps' :$itemformat = 'application/postscript' ;   break;
-                     case 'dvi' :$itemformat = 'application/x-dvi'      ;   break;
-                     case 'doc' :$itemformat = 'application/msword'     ;   break;
+                     case 'pdf' :$itemformat = 'application/pdf'          ;break;
+                     case 'ps'  :$itemformat = 'application/postscript'   ;break;
+                     case 'eps' :$itemformat = 'application/postscript'   ;break;
+                     case 'dvi' :$itemformat = 'application/x-dvi'        ;break;
+                     case 'doc' :$itemformat = 'application/msword'       ;break;
                      case 'docx':$itemformat = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';break;
-                     case 'png' :$itemformat = 'image/png'              ;   break;
-                     case 'psd' :$itemformat = 'application/octet-stream';  break;
-                     case 'jpeg':$itemformat = 'image/jpeg'              ;  break;
-                     case 'jpg' :$itemformat = 'image/jpeg'              ;  break;
-                     case 'jpe' :$itemformat = 'image/jpeg'              ;  break;
-                     case 'tif' :$itemformat = 'image/tiff'              ;  break;
-                     case 'tiff':$itemformat = 'image/tiff'              ;  break;
-                     case 'gif':$itemformat  = 'image/gif'               ;  break;
-                     case 'xml':$itemformat  = 'application/xml'         ;  break;
+                     case 'png' :$itemformat = 'image/png'                ;break;
+                     case 'psd' :$itemformat = 'application/octet-stream' ;break;
+                     case 'jpeg':$itemformat = 'image/jpeg'               ;break;
+                     case 'jpg' :$itemformat = 'image/jpeg'               ;break;
+                     case 'jpe' :$itemformat = 'image/jpeg'               ;break;
+                     case 'tif' :$itemformat = 'image/tiff'               ;break;
+                     case 'tiff':$itemformat = 'image/tiff'               ;break;
+                     case 'gif' :$itemformat = 'image/gif'                ;break;
+                     case 'xml' :$itemformat = 'application/xml'          ;break;
                  
                      /* Fallback */
                      default: $itemformat = 'text/html';
