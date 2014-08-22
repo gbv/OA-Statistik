@@ -7,8 +7,8 @@
  * 
  * See below for controller!
  * 
- * Version 1.2
- * 17.04.2013
+ * Version 1.3
+ * 17.02.2014
  */
 
 ini_set('display_errors', 0);
@@ -170,7 +170,7 @@ class MyOAIDataProvider extends OAI20DataProvider {
 		if(!$until) $until=strtotime('2037-12-31'); // STUPID!
                 
 		$stmt=$this->dbc->prepare('SELECT * FROM '.$config['db_table'].
-			' WHERE timestamp > ? AND timestamp < ? LIMIT '.
+			' WHERE timestamp > ? AND timestamp <= ? LIMIT '.
 			((int) $this->config['max_items']).
 			' OFFSET '.((int) $this->_params['pos']).';');
                 
@@ -184,7 +184,7 @@ class MyOAIDataProvider extends OAI20DataProvider {
                 }
 		
 		// append resumption token if necessary
-		$stmt=$this->dbc->prepare('SELECT COUNT(*) AS relevant FROM '.$config['db_table'].' WHERE timestamp > ? AND timestamp < ?');
+		$stmt=$this->dbc->prepare('SELECT COUNT(*) AS relevant FROM '.$config['db_table'].' WHERE timestamp > ? AND timestamp <= ?');
 		if((!$stmt->execute(array($from, $until))) || (!($data=$stmt->fetch()))) {
 			// TODO: handle generic error, abort here
 			return false;
