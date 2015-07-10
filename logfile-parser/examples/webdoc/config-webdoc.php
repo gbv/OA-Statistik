@@ -27,7 +27,7 @@ $config=array(
 	'db_identifier'	=> dirname(__FILE__).'/data/oai-harvester-webdoc.db',
 
 	'service_id'	=> 'http://webdoc.sub.gwdg.de/',
-	'baseurl'	=> 'http://webdoc.sub.gwdg.de',
+	'baseurl'		=> 'http://webdoc.sub.gwdg.de',
 	'url_prefix'	=> 'http://webdoc.sub.gwdg.de',
 	'oai_server'	=> 'http://www.gbv.de/goai/gbvrep.php',
 	'metadataPrefix'=> 'oai_dc',

@@ -17,7 +17,7 @@ $config=array(
 	// specific for the DSpace server integration:
 	'db_identifier'	=> dirname(__FILE__).'/data/oai-harvester-dspace.db',
 	'service_id'	=> 'http://goedoc.uni-goettingen.de/',
-	'baseurl'	=> 'http://goedoc.uni-goettingen.de',
+	'baseurl'		=> 'http://goedoc.uni-goettingen.de',
 	'url_prefix'	=> 'http://goedoc.uni-goettingen.de',
 	'oai_server'	=> 'http://goedoc.uni-goettingen.de/goescholar-oai/request',
 	'metadataPrefix'=> 'oai_dc',
