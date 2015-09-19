@@ -5,7 +5,7 @@
  * Frontend to the OAI Service Provider functions,
  * stores metadata in database.
  * 
- * Requires DOM extention
+ * Requires DOM extension
  * 
  * @author Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
  * @package data-provider

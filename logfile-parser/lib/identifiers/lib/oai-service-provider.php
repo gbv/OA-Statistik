@@ -70,7 +70,7 @@ class OAIServiceProviderOAIErrorNoSetHierarchyException
 class OAIServiceProviderOAIParserException
 	extends OAIServiceProviderException {}
 
-/*! Signal or user triggered abort condition occured */
+/*! Signal or user triggered abort condition occurred */
 class OAIServiceProviderAbortException
 	extends OAIServiceProviderException {}
 
