@@ -1,8 +1,8 @@
 log2ctx 1.4.0b: a webserver logfile to context object container (XML) converter
 (c) 2009-2014 OA-Statistik (GBV)
 
-Autor: Marc Giesmann <giesmann@gbv.de> for Verbundzentrale Göttingen
-Autor: Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
+Author: Marc Giesmann <giesmann@gbv.de> for Verbundzentrale Göttingen
+Author: Hans-Werner Hilse <hilse@sub.uni-goettingen.de> for SUB Göttingen
 
 USAGE:
 

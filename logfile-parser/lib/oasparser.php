@@ -82,7 +82,7 @@ class OASParser {
     }
 
 	/**
-	 * Get "C-class" of an IP adress, i.e. the first three bytes
+	 * Get "C-class" of an IP address, i.e. the first three bytes
 	 * @param $ip IP to shorten
 	 * @return string C-class in form xxx.xxx.xxx.0
 	 */

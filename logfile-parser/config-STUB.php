@@ -19,7 +19,7 @@
 
 //You need to create this file. A examplefile is given at this path.
 require_once(dirname(__FILE__).'/lib/oasparser-webserver-STUB.php');
-require_once(dirname(__FILE__).'/config.php');//Dont change this line!
+require_once(dirname(__FILE__).'/config.php');//Don't change this line!
 
 $config=array(
         //The parsername. This has to be exactly the name, you gave your
@@ -36,7 +36,7 @@ $config=array(
 	'baseurl'	=> 'http://EXAMPLE.uni-goettingen.de',
 	'url_prefix'	=> 'http://EXAMPLE.uni-goettingen.de',
     
-        //adress of the oai-pmh interface of your repository. The logfile
+        //address of the oai-pmh interface of your repository. The logfile
         //parser needs it to identify documents via harvest-identifiers.php.
 	'oai_server'	=> 'http://EXAMPLE.uni-goettingen.de/STUB-oai-Server/request',
         'metadataPrefix'=> 'oai_dc',

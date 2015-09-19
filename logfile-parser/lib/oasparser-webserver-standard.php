@@ -175,7 +175,7 @@ class OASParserWebserverStandard extends OASParser {
             
             }else{
                 
-                //Including stats whic happened in async process
+                //Including stats which happened in async process
                 $this->logstats->combineStat($ctxo['logstats']);
                 $ctxo = $ctxo['ctxos'];
                 
